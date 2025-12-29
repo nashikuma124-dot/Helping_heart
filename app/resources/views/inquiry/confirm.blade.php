@@ -1,54 +1,40 @@
 @extends('layouts.app')
-@section('title', 'お問い合わせ確認')
+@section('title','お問い合わせ確認')
 
 @section('content')
-<h1 class="text-2xl font-bold">お問い合わせ内容確認</h1>
+<h1 class="fw-bold mb-3">お問い合わせ内容確認</h1>
 
-<div class="bg-white border rounded-2xl shadow-sm p-6 mt-6 max-w-4xl mx-auto">
-  <h2 class="font-bold">入力内容</h2>
+@php
+  $type = old('type', request('type','plan'));
+  $propertyId = old('property_id', request('property_id',''));
+@endphp
 
-  <div class="mt-4 border rounded-2xl overflow-hidden text-sm">
-    <div class="grid grid-cols-[220px_1fr]">
-      <div class="bg-slate-50 border-b px-3 py-2 font-semibold">お問い合わせ内容</div>
-      <div class="border-b px-3 py-2">{{ old('type', request('type','plan')) }}</div>
-
-      <div class="bg-slate-50 border-b px-3 py-2 font-semibold">お名前</div>
-      <div class="border-b px-3 py-2">{{ old('name', request('name','xxxx')) }}</div>
-
-      <div class="bg-slate-50 border-b px-3 py-2 font-semibold">メールアドレス</div>
-      <div class="border-b px-3 py-2">{{ old('email', request('email','xxxx')) }}</div>
-
-      <div class="bg-slate-50 border-b px-3 py-2 font-semibold">電話番号</div>
-      <div class="border-b px-3 py-2">{{ old('tel', request('tel','xxxx')) }}</div>
-    </div>
+<div class="p-4 bg-white border rounded-4">
+  <div class="table-responsive">
+    <table class="table table-bordered align-middle">
+      <tbody>
+        <tr><th class="bg-light" style="width:220px;">物件ID</th><td>{{ $propertyId }}</td></tr>
+        <tr><th class="bg-light">お問い合わせ内容</th><td>{{ $type }}</td></tr>
+        <tr><th class="bg-light">お名前</th><td>{{ old('name', request('name','')) }}</td></tr>
+        <tr><th class="bg-light">メール</th><td>{{ old('email', request('email','')) }}</td></tr>
+        <tr><th class="bg-light">電話</th><td>{{ old('tel', request('tel','')) }}</td></tr>
+        <tr><th class="bg-light">詳細</th><td>{{ old('content', request('content','')) }}</td></tr>
+      </tbody>
+    </table>
   </div>
 
-  <h2 class="font-bold mt-8">問い合わせ物件</h2>
-  <div class="mt-4 border rounded-2xl overflow-hidden text-sm">
-    <div class="grid grid-cols-[220px_1fr]">
-      <div class="bg-slate-50 border-b px-3 py-2 font-semibold">物件ID</div>
-      <div class="border-b px-3 py-2">{{ request('property_id','xxxx') }}</div>
+  <div class="d-flex flex-wrap gap-2 justify-content-center">
+    <a class="btn btn-outline-secondary" href="{{ url()->previous() }}">入力に戻る</a>
 
-      <div class="bg-slate-50 border-b px-3 py-2 font-semibold">物件名</div>
-      <div class="border-b px-3 py-2">xxxx</div>
-
-      <div class="bg-slate-50 border-b px-3 py-2 font-semibold">住所</div>
-      <div class="border-b px-3 py-2">xxxx</div>
-
-      <div class="bg-slate-50 border-b px-3 py-2 font-semibold">家賃・支払合計金額</div>
-      <div class="border-b px-3 py-2">xxxx</div>
-
-      <div class="bg-slate-50 border-b px-3 py-2 font-semibold">事業所</div>
-      <div class="border-b px-3 py-2">xxxx</div>
-    </div>
-  </div>
-
-  <div class="mt-8 flex flex-wrap justify-center gap-2">
-    <a class="px-4 py-2 rounded-full border hover:bg-slate-50" href="{{ url()->previous() }}">入力に戻る</a>
-
-    <form method="POST" action="{{ route('inquiry.complete') }}">
+    <form method="POST" action="{{ route('inquiries.store') }}">
       @csrf
-      <button class="px-5 py-2 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700" type="submit">送信</button>
+      <input type="hidden" name="property_id" value="{{ $propertyId }}">
+      <input type="hidden" name="type" value="{{ $type }}">
+      <input type="hidden" name="name" value="{{ old('name', request('name','')) }}">
+      <input type="hidden" name="email" value="{{ old('email', request('email','')) }}">
+      <input type="hidden" name="tel" value="{{ old('tel', request('tel','')) }}">
+      <input type="hidden" name="content" value="{{ old('content', request('content','')) }}">
+      <button class="btn btn-primary">送信</button>
     </form>
   </div>
 </div>

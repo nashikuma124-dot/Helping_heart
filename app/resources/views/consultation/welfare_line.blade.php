@@ -1,18 +1,17 @@
 @extends('layouts.app')
-@section('title', '福祉サービス相談 友達追加')
+@section('title','福祉サービス相談（LINE友達追加）')
 
 @section('content')
-<h1 class="text-2xl font-bold">福祉サービス相談（LINE友達追加）</h1>
+<h1 class="fw-bold mb-3">福祉サービス相談（LINE友達追加）</h1>
 
-<div class="bg-white border rounded-2xl shadow-sm p-6 mt-6 max-w-4xl mx-auto text-center">
-  <div class="aspect-[16/6] rounded-2xl border bg-gradient-to-br from-slate-100 to-white grid place-items-center text-slate-500 font-bold">
-    QRコード / 友達追加導線（想定）
+<div class="p-4 bg-white border rounded-4 text-center">
+  <div class="border rounded-4 bg-light d-flex align-items-center justify-content-center"
+       style="height:180px;">
+    <div class="text-secondary fw-bold">QRコード / 友達追加導線（想定）</div>
   </div>
 
-  <p class="text-sm text-slate-500 mt-4">LINEで友達追加が完了したら、下のボタンからチャットを開始します。</p>
+  <p class="text-secondary mt-3 mb-0">友達追加が完了したら、下のボタンからチャットを開始します。</p>
 
- <a class="inline-flex mt-6 px-6 py-3 rounded-2xl bg-blue-600 text-white font-semibold hover:bg-blue-700"
-   href="{{ route('consultation.welfare.chat') }}">チャット開始</a>
-
+  <a class="btn btn-primary mt-3" href="{{ route('consultation.welfare.chat') }}">チャット開始</a>
 </div>
 @endsection

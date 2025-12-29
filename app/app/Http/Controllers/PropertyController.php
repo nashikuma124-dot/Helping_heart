@@ -23,4 +23,5 @@ class PropertyController extends Controller
     {
         return view('property.detail', ['id' => $property]);
     }
+
 }

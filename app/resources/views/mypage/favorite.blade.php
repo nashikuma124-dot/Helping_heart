@@ -1,25 +1,35 @@
 @extends('layouts.app')
-@section('title', 'お気に入り物件一覧')
+@section('title','お気に入り')
 
 @section('content')
-<h1 class="text-2xl font-bold">お気に入り物件一覧</h1>
+<h1 class="fw-bold mb-3">お気に入り</h1>
 
-<div class="bg-white border rounded-2xl shadow-sm p-6 mt-6">
-  <p class="text-sm text-slate-500">※仕様書：1ページ10件／掲載日が新しい順</p>
+<div class="row g-3">
+  @php
+    $items = [
+      ['id'=>1001,'title'=>'サンプル物件A','meta'=>'東京都〇〇区 / 空室あり'],
+      ['id'=>1002,'title'=>'サンプル物件B','meta'=>'大阪府〇〇市 / 空室なし'],
+    ];
+  @endphp
 
-  <div class="grid md:grid-cols-2 gap-4 mt-4">
-    @foreach([['id'=>2001,'title'=>'物件情報（お気に入り）1','meta'=>'東京都〇〇区 / 空室：あり'],
-              ['id'=>2002,'title'=>'物件情報（お気に入り）2','meta'=>'大阪府〇〇市 / 空室：なし']] as $p)
-      <div class="border rounded-2xl p-4">
-        <div class="font-extrabold">{{ $p['title'] }}</div>
-        <div class="text-sm text-slate-500 mt-1">{{ $p['meta'] }}</div>
+  @foreach($items as $p)
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <div class="fw-bold">{{ $p['title'] }}</div>
+          <div class="text-secondary">{{ $p['meta'] }}</div>
 
-        <div class="mt-3 flex flex-wrap gap-2">
-          <a class="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700" href="{{ route('property.detail', $p['id']) }}">詳細</a>
-          <button class="px-4 py-2 rounded-full border hover:bg-slate-50" type="button">♡ 解除</button>
+          <div class="d-flex gap-2 mt-3">
+            <a class="btn btn-primary" href="{{ route('properties.show', $p['id']) }}">詳細</a>
+            <form method="POST" action="{{ route('favorites.destroy', $p['id']) }}">
+              @csrf
+              @method('DELETE')
+              <button class="btn btn-outline-secondary" type="submit">解除</button>
+            </form>
+          </div>
         </div>
       </div>
-    @endforeach
-  </div>
+    </div>
+  @endforeach
 </div>
 @endsection

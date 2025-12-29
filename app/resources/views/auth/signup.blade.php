@@ -1,41 +1,42 @@
 @extends('layouts.app')
-@section('title', '会員登録')
+@section('title','会員登録')
 
 @section('content')
-<h1 class="text-2xl font-bold">会員登録</h1>
+<h1 class="fw-bold mb-3">会員登録</h1>
 
-<div class="bg-white border rounded-2xl shadow-sm p-6 mt-6 max-w-3xl mx-auto">
-  <form method="POST" action="{{ route('signup.confirm') }}" class="space-y-4">
+<div class="p-4 bg-white border rounded-4" style="max-width:720px; margin:auto;">
+  <form method="POST" action="{{ route('signup.confirm') }}" class="row g-3">
     @csrf
 
-    <div>
-      <div class="font-semibold">メールアドレス</div>
-      <input name="email" type="email" class="mt-2 w-full border rounded-xl px-3 py-2" placeholder="メールアドレス入力" required>
+    <div class="col-12">
+      <label class="form-label fw-semibold">メールアドレス</label>
+      <input name="email" type="email" class="form-control" placeholder="メールアドレス入力" required>
     </div>
 
-    <div>
-      <div class="font-semibold">パスワード</div>
-      <input name="password" type="password" class="mt-2 w-full border rounded-xl px-3 py-2" placeholder="パスワード入力（英数字6文字以上）" required>
+    <div class="col-12">
+      <label class="form-label fw-semibold">パスワード</label>
+      <input name="password" type="password" class="form-control" placeholder="英数字6文字以上" required>
     </div>
 
-    <div>
-      <div class="font-semibold">パスワード確認</div>
-      <input name="password_confirmation" type="password" class="mt-2 w-full border rounded-xl px-3 py-2" placeholder="パスワード確認入力" required>
+    <div class="col-12">
+      <label class="form-label fw-semibold">パスワード確認</label>
+      <input name="password_confirmation" type="password" class="form-control" placeholder="確認入力" required>
     </div>
 
-    <div>
-      <div class="font-semibold">お名前</div>
-      <input name="name" class="mt-2 w-full border rounded-xl px-3 py-2" placeholder="名前入力" required>
+    <div class="col-12">
+      <label class="form-label fw-semibold">お名前</label>
+      <input name="name" class="form-control" placeholder="名前入力" required>
     </div>
 
-    <div>
-      <div class="font-semibold">生年月日</div>
-      <input name="dob" type="date" class="mt-2 w-full border rounded-xl px-3 py-2" required>
+    <div class="col-12">
+      <label class="form-label fw-semibold">生年月日</label>
+      <input name="dob" type="date" class="form-control" required>
     </div>
 
-    <button class="w-full px-5 py-3 rounded-2xl bg-blue-600 text-white font-semibold hover:bg-blue-700">
-      確認画面へ
-    </button>
+    <div class="col-12 d-grid gap-2">
+      <button class="btn btn-primary py-2">確認画面へ</button>
+      <a class="btn btn-outline-secondary py-2" href="{{ route('login') }}">ログインへ</a>
+    </div>
   </form>
 </div>
 @endsection

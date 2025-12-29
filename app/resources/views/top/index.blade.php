@@ -3,16 +3,38 @@
 @section('title', 'トップ')
 
 @section('content')
-<div class="min-h-[60vh] grid place-items-center">
-  <div class="bg-white border rounded-2xl shadow-sm p-8 w-full max-w-3xl">
-    <h1 class="text-2xl font-bold">トップページ</h1>
-    <p class="text-slate-500 mt-2">目的を選んで進んでください。</p>
+<div
+  class="min-vh-100 d-flex align-items-center justify-content-center"
+  style="
+    background-image: url('{{ asset('images/top_forest_bg.png') }}');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  "
+>
+  {{-- オーバーレイ --}}
+  <div class="bg-white bg-opacity-75 rounded-4 shadow p-5 text-center" style="max-width: 600px; width: 100%;">
+    <h1 class="fw-bold mb-3">Helping Heart</h1>
+    <p class="text-muted mb-4">
+      福祉グループホーム・住まい探しと相談の窓口
+    </p>
 
-    <div class="grid md:grid-cols-2 gap-4 mt-8">
-      <a href="{{ route('property.search') }}" class="block text-center px-5 py-4 rounded-2xl bg-blue-600 text-white font-semibold hover:bg-blue-700">① 物件検索</a>
-      <a href="{{ route('consultation.index') }}" class="block text-center px-5 py-4 rounded-2xl bg-blue-600 text-white font-semibold hover:bg-blue-700">② LINE相談</a>
-      <a href="{{ route('signup') }}" class="block text-center px-5 py-4 rounded-2xl border font-semibold hover:bg-slate-50">③ 会員登録</a>
-      <a href="{{ route('login') }}" class="block text-center px-5 py-4 rounded-2xl border font-semibold hover:bg-slate-50">④ ログイン</a>
+    <div class="d-grid gap-3">
+      <a href="{{ route('properties.index') }}" class="btn btn-warning btn-lg">
+        物件検索
+      </a>
+
+      <a href="{{ route('consultation.index') }}" class="btn btn-outline-secondary btn-lg">
+        LINE相談
+      </a>
+
+      <a href="{{ route('signup') }}" class="btn btn-outline-primary">
+        会員登録
+      </a>
+
+      <a href="{{ route('login') }}" class="btn btn-outline-dark">
+        ログイン
+      </a>
     </div>
   </div>
 </div>

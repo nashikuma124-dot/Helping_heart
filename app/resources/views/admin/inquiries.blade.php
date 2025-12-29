@@ -1,29 +1,40 @@
 @extends('layouts.app')
-@section('title', 'ユーザー問い合わせ管理')
+@section('title','ユーザー問い合わせ管理')
 
 @section('content')
-<h1 class="text-2xl font-bold">ユーザー問い合わせ管理</h1>
+<h1 class="fw-bold mb-3">ユーザー問い合わせ管理</h1>
 
-<div class="bg-white border rounded-2xl shadow-sm p-6 mt-6 overflow-x-auto">
-  <table class="w-full border text-sm">
-    <tr class="bg-slate-50">
-      <th class="border px-3 py-2 text-left">ID</th>
-      <th class="border px-3 py-2 text-left">ユーザー</th>
-      <th class="border px-3 py-2 text-left">物件ID</th>
-      <th class="border px-3 py-2 text-left">内容</th>
-      <th class="border px-3 py-2 text-left">日時</th>
-      <th class="border px-3 py-2"></th>
-    </tr>
-    <tr>
-      <td class="border px-3 py-2">501</td><td class="border px-3 py-2">山田 太郎</td><td class="border px-3 py-2">1001</td>
-      <td class="border px-3 py-2">見学希望</td><td class="border px-3 py-2">2025-12-15</td>
-      <td class="border px-3 py-2"><a class="px-3 py-1 rounded-full border hover:bg-slate-50" href="#">物件</a></td>
-    </tr>
-    <tr>
-      <td class="border px-3 py-2">502</td><td class="border px-3 py-2">佐藤 花子</td><td class="border px-3 py-2">1002</td>
-      <td class="border px-3 py-2">料金詳細</td><td class="border px-3 py-2">2025-12-16</td>
-      <td class="border px-3 py-2"><a class="px-3 py-1 rounded-full border hover:bg-slate-50" href="#">物件</a></td>
-    </tr>
-  </table>
+<div class="p-4 bg-white border rounded-4">
+  <div class="table-responsive">
+    <table class="table table-bordered align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>ID</th>
+          <th>ユーザー</th>
+          <th>物件ID</th>
+          <th>内容</th>
+          <th>日時</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @foreach([
+          ['id'=>501,'user'=>'山田 太郎','property'=>1001,'body'=>'見学希望','date'=>'2025-12-15'],
+          ['id'=>502,'user'=>'佐藤 花子','property'=>1002,'body'=>'料金詳細','date'=>'2025-12-16'],
+        ] as $i)
+          <tr>
+            <td>{{ $i['id'] }}</td>
+            <td>{{ $i['user'] }}</td>
+            <td>{{ $i['property'] }}</td>
+            <td>{{ $i['body'] }}</td>
+            <td>{{ $i['date'] }}</td>
+            <td class="text-nowrap">
+              <a class="btn btn-sm btn-outline-secondary" href="{{ route('properties.show', $i['property']) }}">物件</a>
+            </td>
+          </tr>
+        @endforeach
+      </tbody>
+    </table>
+  </div>
 </div>
 @endsection

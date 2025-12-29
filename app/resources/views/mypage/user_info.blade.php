@@ -1,24 +1,25 @@
 @extends('layouts.app')
-@section('title', '会員情報')
+@section('title','会員情報')
 
 @section('content')
-<h1 class="text-2xl font-bold">会員情報</h1>
+<h1 class="fw-bold mb-3">会員情報</h1>
 
-<div class="bg-white border rounded-2xl shadow-sm p-6 mt-6 max-w-3xl mx-auto">
-  <div class="overflow-x-auto">
-    <table class="w-full border text-sm">
-      <tr class="bg-slate-50"><th class="border px-3 py-2 text-left w-56">メールアドレス</th><td class="border px-3 py-2">xxxxx@example.com</td></tr>
-      <tr><th class="border px-3 py-2 text-left">パスワード</th><td class="border px-3 py-2">********</td></tr>
-      <tr class="bg-slate-50"><th class="border px-3 py-2 text-left">お名前</th><td class="border px-3 py-2">xxxxx</td></tr>
-      <tr><th class="border px-3 py-2 text-left">生年月日</th><td class="border px-3 py-2">xxxx.xx.xx</td></tr>
-    </table>
-  </div>
+<div class="p-4 bg-white border rounded-4" style="max-width:720px; margin:auto;">
+  <table class="table table-bordered align-middle mb-0">
+    <tbody>
+      <tr><th class="bg-light" style="width:220px;">メール</th><td>xxxxx@example.com</td></tr>
+      <tr><th class="bg-light">お名前</th><td>xxxxx</td></tr>
+      <tr><th class="bg-light">生年月日</th><td>xxxx-xx-xx</td></tr>
+    </tbody>
+  </table>
 
-  <div class="mt-6">
-    <a class="inline-flex px-6 py-3 rounded-2xl bg-blue-600 text-white font-semibold hover:bg-blue-700" href="{{ route('user.edit') }}">
-        ① 会員情報を変更する
-    </a>
+  <div class="d-grid gap-2 mt-3">
+    <a class="btn btn-primary" href="{{ route('mypage.edit', 1) }}">会員情報を変更する</a>
 
+    <form method="POST" action="{{ route('user.delete') }}">
+      @csrf
+      <button class="btn btn-outline-danger" type="submit">退会（仮）</button>
+    </form>
   </div>
 </div>
 @endsection
