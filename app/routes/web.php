@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PropertyManagementController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\InquiryManagementController;
+use App\Http\Controllers\Ajax\LocationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -160,3 +161,6 @@ Route::get('/search', [PropertyController::class, 'search'])->name('property.sea
 
 // 検索結果（画面）
 Route::get('/result', [PropertyController::class, 'result'])->name('property.result');
+
+Route::get('/ajax/cities', [LocationController::class, 'cities'])
+    ->name('ajax.cities');

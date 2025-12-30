@@ -20,9 +20,10 @@
     </p>
 
     <div class="d-grid gap-3">
-      <a href="{{ route('properties.index') }}" class="btn btn-warning btn-lg">
+      <a href="{{ route('property.search') }}" class="btn btn-warning btn-lg">
         物件検索
       </a>
+
 
       <a href="{{ route('consultation.index') }}" class="btn btn-outline-secondary btn-lg">
         LINE相談
