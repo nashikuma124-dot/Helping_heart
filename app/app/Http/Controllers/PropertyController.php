@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Area;
-use App\Models\City;
-use App\Models\Property;
-use Illuminate\Http\Request;
+use App\Models\BusinessType;
+use App\Models\Gender;
+use App\Models\BuildingType;
+use App\Models\Feature;
 
 class PropertyController extends Controller
 {
@@ -24,8 +24,14 @@ class PropertyController extends Controller
     // 検索画面
     public function search()
     {
-        $areas = Area::orderBy('sort_order')->get();
-        return view('property.search', compact('areas'));
+        $businessTypes = BusinessType::orderBy('sort_order')->get();
+        $genders       = Gender::orderBy('sort_order')->get();
+        $buildingTypes = BuildingType::orderBy('sort_order')->get();
+        $features      = Feature::orderBy('sort_order')->get();
+
+        return view('property.search', compact(
+            'businessTypes', 'genders', 'buildingTypes', 'features'
+        ));
     }
 
     // 検索結果

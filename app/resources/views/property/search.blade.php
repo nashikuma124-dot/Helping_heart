@@ -32,33 +32,25 @@
     <div class="col-12">
       <label class="form-label fw-semibold">事業種類</label>
       @php $business = (array)request('business', []); @endphp
-      <div class="d-flex flex-wrap gap-3">
-        <div class="form-check">
-          <input class="form-check-input" type="checkbox" name="business[]" value="home" id="bHome"
-                 @checked(in_array('home',$business))>
-          <label class="form-check-label" for="bHome">グループホーム</label>
+      @foreach($businessTypes as $bt)
+        <div class="form-check me-3">
+            <input class="form-check-input" type="checkbox"
+                name="business[]" value="{{ $bt->id }}" id="bt{{ $bt->id }}"
+                @checked(in_array((string)$bt->id, array_map('strval',$business)))>
+            <label class="form-check-label" for="bt{{ $bt->id }}">{{ $bt->name }}</label>
         </div>
-        <div class="form-check">
-          <input class="form-check-input" type="checkbox" name="business[]" value="welfare" id="bWelfare"
-                 @checked(in_array('welfare',$business))>
-          <label class="form-check-label" for="bWelfare">福祉サービス</label>
-        </div>
-      </div>
+      @endforeach
     </div>
 
-    {{-- 障害者 区分 --}}
+    {{-- 障害者区分 --}}
     <div class="col-12">
-      <label class="form-label fw-semibold">障害者 区分</label>
-      @php $level = (array)request('level', []); @endphp
-      <div class="d-flex flex-wrap gap-3">
-        @for($i=1;$i<=3;$i++)
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" name="level[]" value="{{ $i }}" id="lv{{ $i }}"
-                   @checked(in_array((string)$i, array_map('strval',$level)))>
-            <label class="form-check-label" for="lv{{ $i }}">区分{{ $i }}</label>
-          </div>
-        @endfor
-      </div>
+      <label class="form-label fw-semibold">障害者区分</label>
+      <select name="disability_level" class="form-select">
+        <option value="">区分を選択</option>
+        <option value="1" @selected(request('disability_level')=='1')>区分1</option>
+        <option value="2" @selected(request('disability_level')=='2')>区分2</option>
+        <option value="3" @selected(request('disability_level')=='3')>区分3</option>
+      </select>
     </div>
 
     {{-- 家賃 --}}
@@ -75,42 +67,43 @@
     {{-- 受入性別 --}}
     <div class="col-md-6">
       <label class="form-label fw-semibold">受入性別</label>
-      <select name="gender" class="form-select">
-        <option value="">性別を選択</option>
-        <option value="male" @selected(request('gender')==='male')>男性</option>
-        <option value="female" @selected(request('gender')==='female')>女性</option>
-        <option value="any" @selected(request('gender')==='any')>男女可</option>
-      </select>
+      @php $gender = (array)request('gender', []); @endphp
+      @foreach($gender as $g)
+        <div class="form-check me-3">
+          <input class="form-check-input" type="checkbox"
+            name="gender[]" value="{{ $g->id }}" id="g{{ $g->id }}"
+            @checked(in_array((string)$g->id, array_map('strval',$gender)))>
+          <label class="form-check-label" for="g{{ $g->id }}">{{ $g->name }}</label>
+        </div>
+      @endforeach
     </div>
 
     {{-- 建物タイプ --}}
     <div class="col-12">
       <label class="form-label fw-semibold">建物タイプ</label>
       @php $building = (array)request('building', []); @endphp
-      <div class="d-flex flex-wrap gap-3">
-        @foreach([['house','戸建て'],['mansion','マンション'],['apartment','アパート']] as [$val,$label])
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" name="building[]" value="{{ $val }}" id="bd{{ $val }}"
-                   @checked(in_array($val,$building))>
-            <label class="form-check-label" for="bd{{ $val }}">{{ $label }}</label>
-          </div>
-        @endforeach
-      </div>
+      @foreach($buildingTypes as $b)
+        <div class="form-check me-3">
+          <input class="form-check-input" type="checkbox"
+            name="building[]" value="{{ $b->id }}" id="b{{ $b->id }}"
+            @checked(in_array((string)$b->id, array_map('strval',$building)))>
+          <label class="form-check-label" for="b{{ $b->id }}">{{ $b->name }}</label>
+        </div>
+      @endforeach
     </div>
 
-    {{-- その他情報 --}}
+    {{-- その他特徴 --}}
     <div class="col-12">
-      <label class="form-label fw-semibold">その他情報</label>
+      <label class="form-label fw-semibold">その他特徴</label>
       @php $feature = (array)request('feature', []); @endphp
-      <div class="d-flex flex-wrap gap-3">
-        @foreach([['barrierfree','バリアフリー'],['meals','食事提供'],['support','生活サポート']] as [$val,$label])
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" name="feature[]" value="{{ $val }}" id="ft{{ $val }}"
-                   @checked(in_array($val,$feature))>
-            <label class="form-check-label" for="ft{{ $val }}">{{ $label }}</label>
-          </div>
-        @endforeach
-      </div>
+      @foreach($features as $f)
+        <div class="form-check me-3">
+            <input class="form-check-input" type="checkbox"
+                name="feature[]" value="{{ $f->id }}" id="f{{ $f->id }}"
+                @checked(in_array((string)$f->id, array_map('strval',$feature)))>
+            <label class="form-check-label" for="f{{ $f->id }}">{{ $f->name }}</label>
+        </div>
+      @endforeach
     </div>
 
     {{-- フリーワード --}}

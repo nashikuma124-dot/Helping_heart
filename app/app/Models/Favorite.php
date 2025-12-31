@@ -1,11 +1,20 @@
 <?php
 
-namespace App;
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
 class Favorite extends Model
 {
+    protected $table = 'favorites';
+
+    public $timestamps = false;
+
+    protected $fillable = [
+        'user_id',
+        'property_id',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -16,4 +25,3 @@ class Favorite extends Model
         return $this->belongsTo(Property::class);
     }
 }
-
