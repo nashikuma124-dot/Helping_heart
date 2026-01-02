@@ -10,10 +10,17 @@ class LocationController extends Controller
 {
     public function cities(Request $request)
     {
-        $areaId = $request->query('area_id');
+        $areaId = (int) $request->query('area_id');
 
-        return City::where('area_id', $areaId)
+        if ($areaId <= 0) {
+            return response()->json([]);
+        }
+
+        $cities = City::where('area_id', $areaId)
             ->orderBy('sort_order')
+            ->orderBy('name')
             ->get(['id', 'name']);
+
+        return response()->json($cities);
     }
 }

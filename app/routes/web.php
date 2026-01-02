@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PropertyManagementController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\InquiryManagementController;
+
 use App\Http\Controllers\Ajax\LocationController;
 
 /*
@@ -30,22 +31,24 @@ use App\Http\Controllers\Ajax\LocationController;
 Route::get('/', [TopController::class, 'index'])->name('top');
 
 // 物件（一覧・詳細）※ ResourceController
-Route::resource('properties', PropertyController::class)
-    ->only(['index', 'show']);
+Route::resource('properties', PropertyController::class)->only(['index', 'show']);
+
+// 物件検索（画面）
+Route::get('/search', [PropertyController::class, 'search'])->name('property.search');
+
+// 検索結果（画面）
+Route::get('/result', [PropertyController::class, 'result'])->name('property.result');
+
+// Ajax：都道府県→市区町村
+Route::get('/ajax/cities', [LocationController::class, 'cities'])->name('ajax.cities');
 
 // お問い合わせ（確認画面ありのため一部手動）
-Route::get('inquiries/{property}', [InquiryController::class, 'create'])
-    ->name('inquiries.create');
-
-Route::post('inquiries/confirm', [InquiryController::class, 'confirm'])
-    ->name('inquiries.confirm');
-
-Route::post('inquiries', [InquiryController::class, 'store'])
-    ->name('inquiries.store');
+Route::get('inquiries/{property}', [InquiryController::class, 'create'])->name('inquiries.create');
+Route::post('inquiries/confirm', [InquiryController::class, 'confirm'])->name('inquiries.confirm');
+Route::post('inquiries', [InquiryController::class, 'store'])->name('inquiries.store');
 
 // エラー画面
 Route::view('/error', 'error')->name('error');
-
 
 /*
 |--------------------------------------------------------------------------
@@ -82,7 +85,6 @@ Route::post('/password/reset', [LoginController::class, 'send']);
 Route::get('/password/reset/form/{token}', [LoginController::class, 'form'])->name('password.form');
 Route::post('/password/reset/complete', [LoginController::class, 'complete'])->name('password.complete');
 
-
 /*
 |--------------------------------------------------------------------------
 | ログイン後（会員）
@@ -92,16 +94,14 @@ Route::post('/password/reset/complete', [LoginController::class, 'complete'])->n
 Route::middleware('auth')->group(function () {
 
     // マイページ（ResourceController）
-    Route::resource('mypage', MyPageController::class)
-        ->only(['index', 'edit', 'update']);
+    Route::resource('mypage', MyPageController::class)->only(['index', 'edit', 'update']);
 
     // 会員情報（追加）
     Route::get('/user', [MyPageController::class, 'show'])->name('user.info');
     Route::post('/user/delete', [MyPageController::class, 'delete'])->name('user.delete');
 
     // お気に入り
-    Route::resource('favorites', FavoriteController::class)
-        ->only(['index', 'store', 'destroy']);
+    Route::resource('favorites', FavoriteController::class)->only(['index', 'store', 'destroy']);
 
     // チャット相談
     Route::prefix('consultation')->name('consultation.')->group(function () {
@@ -113,54 +113,28 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-
 /*
 |--------------------------------------------------------------------------
 | 管理者
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('admin')
-    ->middleware(['auth', 'admin'])
-    ->name('admin.')
-    ->group(function () {
+Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
 
-        // 管理者トップ
-        Route::get('/', [DashboardController::class, 'index'])
-            ->name('dashboard');
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-        // 管理：物件
-        Route::resource('properties', PropertyManagementController::class)
-            ->only(['index', 'show', 'edit', 'update']);
+    Route::resource('properties', PropertyManagementController::class)->only(['index', 'show', 'edit', 'update']);
+    Route::resource('users', UserManagementController::class)->only(['index', 'show']);
+    Route::resource('inquiries', InquiryManagementController::class)->only(['index']);
 
-        // 管理：会員
-        Route::resource('users', UserManagementController::class)
-            ->only(['index', 'show']);
-
-        // 管理：問い合わせ
-        Route::resource('inquiries', InquiryManagementController::class)
-            ->only(['index']);
-
-        // 管理：相談
-        Route::get('/consultations', [ConsultationController::class, 'adminIndex'])
-            ->name('consultations.index');
-    });
-
+    Route::get('/consultations', [ConsultationController::class, 'adminIndex'])->name('consultations.index');
+});
 
 /*
 |--------------------------------------------------------------------------
-| フォールバック（404）
+| フォールバック（404）※必ず一番最後
 |--------------------------------------------------------------------------
 */
 Route::fallback(function () {
     return view('error');
 });
-
-// 物件検索（画面）
-Route::get('/search', [PropertyController::class, 'search'])->name('property.search');
-
-// 検索結果（画面）
-Route::get('/result', [PropertyController::class, 'result'])->name('property.result');
-
-Route::get('/ajax/cities', [LocationController::class, 'cities'])
-    ->name('ajax.cities');

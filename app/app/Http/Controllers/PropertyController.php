@@ -2,10 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
+use App\Models\Area;
+use App\Models\City;
+use App\Models\Property;
 use App\Models\BusinessType;
 use App\Models\Gender;
 use App\Models\BuildingType;
 use App\Models\Feature;
+use App\Models\LevelDisability;
+use App\Models\Amount;
+
 
 class PropertyController extends Controller
 {
@@ -28,9 +35,12 @@ class PropertyController extends Controller
         $genders       = Gender::orderBy('sort_order')->get();
         $buildingTypes = BuildingType::orderBy('sort_order')->get();
         $features      = Feature::orderBy('sort_order')->get();
+        $areas         = Area::orderBy('sort_order')->get();
+        $levels        = LevelDisability::orderBy('sort_order')->get();
+        $amounts       = Amount::orderBy('sort_order')->get();
 
         return view('property.search', compact(
-            'businessTypes', 'genders', 'buildingTypes', 'features'
+            'businessTypes', 'genders', 'buildingTypes', 'features', 'areas', 'levels', 'amounts'
         ));
     }
 
@@ -48,7 +58,7 @@ class PropertyController extends Controller
         }
 
         if ($request->filled('city_id')) {
-            $cityId = (int)$request->city_id;
+            $cityIds = (array)$request->input('city_id', []);
 
             // $q->whereHas('cities', fn($qq) => $qq->where('city.id', $cityId));
         }
