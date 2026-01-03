@@ -171,6 +171,25 @@
   </div>
 </div>
 
+{{-- 空室のみ --}}
+@php $vacantOnly = request('vacant_only', ''); @endphp
+<div class="col-12">
+  <div class="form-check">
+    <input
+      class="form-check-input"
+      type="checkbox"
+      name="vacant_only"
+      value="1"
+      id="vacantOnly"
+      {{ $vacantOnly === '1' ? 'checked' : '' }}
+    >
+    <label class="form-check-label fw-semibold" for="vacantOnly">
+      空室がある物件のみ表示
+    </label>
+  </div>
+</div>
+
+
 {{-- ================= フリーワード ================= --}}
 <div class="col-12">
   <label class="form-label fw-semibold">フリーワード</label>
@@ -186,53 +205,105 @@
 
 {{-- ================= Ajax 市区町村 ================= --}}
 <script>
-const areaSelect = document.getElementById('areaSelect');
-const cityBox = document.getElementById('cityBox');
-const selectedCityIds = JSON.parse(document.getElementById('selectedCityIds').value || '[]');
+  const areaSelect = document.getElementById('areaSelect');
+  const cityBox = document.getElementById('cityBox');
+  const selectedCityIds = JSON.parse(document.getElementById('selectedCityIds').value || '[]');
 
-async function loadCities(areaId) {
-  cityBox.innerHTML = '';
-  if (!areaId) {
-    cityBox.innerHTML = '<div class="text-muted small">都道府県を選択してください</div>';
-    return;
+  async function loadCities(areaId) {
+    cityBox.innerHTML = '';
+
+    if (!areaId) {
+      cityBox.innerHTML = '<div class="text-muted small">都道府県を選択してください</div>';
+      return;
+    }
+
+    const url = `{{ route('ajax.cities') }}?area_id=${encodeURIComponent(areaId)}`;
+    const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+
+    if (!res.ok) {
+      cityBox.innerHTML = '<div class="text-danger small">市区町村の取得に失敗しました</div>';
+      return;
+    }
+
+    const cities = await res.json();
+    if (!cities.length) {
+      cityBox.innerHTML = '<div class="text-muted small">市区町村がありません</div>';
+      return;
+    }
+
+    const wrap = document.createElement('div');
+    wrap.className = 'd-flex flex-wrap gap-3';
+
+    /* ===== すべて選択チェックボックス ===== */
+    const allDiv = document.createElement('div');
+    allDiv.className = 'form-check w-100 mb-2';
+
+    const allInput = document.createElement('input');
+    allInput.type = 'checkbox';
+    allInput.className = 'form-check-input';
+    allInput.id = 'city_all';
+
+    const allLabel = document.createElement('label');
+    allLabel.className = 'form-check-label fw-semibold';
+    allLabel.htmlFor = 'city_all';
+    allLabel.textContent = 'すべて選択';
+
+    allDiv.appendChild(allInput);
+    allDiv.appendChild(allLabel);
+    wrap.appendChild(allDiv);
+
+    /* ===== 市区町村チェックボックス ===== */
+    const cityCheckboxes = [];
+
+    cities.forEach(c => {
+      const id = parseInt(c.id, 10);
+
+      const div = document.createElement('div');
+      div.className = 'form-check';
+
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.className = 'form-check-input';
+      input.name = 'city_ids[]';
+      input.value = id;
+      input.id = `city_${id}`;
+      input.checked = selectedCityIds.includes(id);
+
+      const label = document.createElement('label');
+      label.className = 'form-check-label';
+      label.htmlFor = input.id;
+      label.textContent = c.name;
+
+      input.addEventListener('change', () => {
+        allInput.checked = cityCheckboxes.every(cb => cb.checked);
+      });
+
+      cityCheckboxes.push(input);
+
+      div.appendChild(input);
+      div.appendChild(label);
+      wrap.appendChild(div);
+    });
+
+    /* ===== すべて選択ON/OFF ===== */
+    allInput.addEventListener('change', () => {
+      cityCheckboxes.forEach(cb => cb.checked = allInput.checked);
+    });
+
+    // 初期状態：全部チェックされていればON
+    allInput.checked = cityCheckboxes.length > 0 && cityCheckboxes.every(cb => cb.checked);
+
+    cityBox.appendChild(wrap);
   }
 
-  const res = await fetch(`{{ route('ajax.cities') }}?area_id=${areaId}`);
-  const cities = await res.json();
-
-  const wrap = document.createElement('div');
-  wrap.className = 'd-flex flex-wrap gap-3';
-
-  cities.forEach(c => {
-    const div = document.createElement('div');
-    div.className = 'form-check';
-
-    const input = document.createElement('input');
-    input.type = 'checkbox';
-    input.name = 'city_ids[]';
-    input.value = c.id;
-    input.className = 'form-check-input';
-    input.checked = selectedCityIds.includes(parseInt(c.id));
-
-    const label = document.createElement('label');
-    label.className = 'form-check-label';
-    label.textContent = c.name;
-
-    div.appendChild(input);
-    div.appendChild(label);
-    wrap.appendChild(div);
+  areaSelect.addEventListener('change', (e) => {
+    selectedCityIds.length = 0;
+    loadCities(e.target.value);
   });
 
-  cityBox.appendChild(wrap);
-}
-
-areaSelect.addEventListener('change', e => {
-  selectedCityIds.length = 0;
-  loadCities(e.target.value);
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-  if (areaSelect.value) loadCities(areaSelect.value);
-});
+  document.addEventListener('DOMContentLoaded', () => {
+    loadCities(areaSelect.value);
+  });
 </script>
+
 @endsection
