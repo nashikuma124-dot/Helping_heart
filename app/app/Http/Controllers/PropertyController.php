@@ -28,18 +28,24 @@ class PropertyController extends Controller
 
     public function show(Property $property)
     {
-        $property->load([
-            'images',
-            'area',
-            'gender',
-            'cities',
-            'businessTypes',
-            'buildingTypes',
-            'features',
-        ]);
+    $property->load([
+        'images' => function ($q) {
+            $q->orderBy('sort_order');
+        },
+        'area',
+        'gender',
+        'cities',
+        'businessTypes',
+        'buildingTypes',
+        'features',
+        'levelDisability',
+        'amount',
+    ]);
 
-        return view('property.show', compact('property'));
+    return view('property.show', compact('property'));
     }
+
+
 
     // 検索画面
     public function search()

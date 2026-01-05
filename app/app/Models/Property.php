@@ -106,6 +106,18 @@ class Property extends Model
         return $this->hasMany(Favorite::class, 'property_id');
     }
 
+    // 障がい者区分（level_disability）
+    public function levelDisability()
+    {
+        return $this->belongsTo(LevelDisability::class, 'level_disability_id');
+    }
+
+    // 金額（amount）
+    public function amount()
+    {
+        return $this->belongsTo(Amount::class, 'amount_id');
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Helpers (optional)

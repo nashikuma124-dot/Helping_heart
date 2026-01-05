@@ -87,10 +87,6 @@
               $img = optional($p->images->sortBy('sort_order')->first())->image_path
                      ?? '/images/dummy/property_1.jpg';
 
-              // 最寄り駅（DB）
-              $station = $p->nearest_station;
-              $walk    = $p->walk_minutes;
-
               // 受入性別（belongsTo想定：Property->gender）
               $genderName = $p->gender->name ?? '—';
 
@@ -105,7 +101,7 @@
                   @auth
                     <form method="POST" action="{{ route('favorites.store', $p->id) }}" class="d-inline">
                       @csrf
-                      <button class="btn btn-outline-secondary btn-sm">お気に入り登録☆</button>
+                      <button class="btn btn-outline-secondary btn-sm" type="submit">お気に入り登録☆</button>
                     </form>
                   @else
                     <a class="btn btn-outline-secondary btn-sm" href="{{ route('login') }}">お気に入り登録☆</a>
@@ -144,15 +140,14 @@
               <div class="text-center fw-semibold mb-1">住所</div>
               <div class="text-center text-secondary mb-2">{{ $p->address }}</div>
 
-              {{-- 最寄り駅 --}}
+              {{-- 最寄り駅（DB） --}}
               <div class="text-center fw-semibold mb-3 text-dark">
                 最寄り駅名：
                 {{ $p->nearest_station ?: '—' }}
                 @if(!is_null($p->walk_minutes))
-                    徒歩{{ (int)$p->walk_minutes }}分
+                  徒歩{{ (int)$p->walk_minutes }}分
                 @endif
               </div>
-
 
               {{-- 説明 --}}
               <div class="small text-secondary border rounded-3 p-2 mb-3 bg-white">

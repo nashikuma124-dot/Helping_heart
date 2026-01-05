@@ -31,7 +31,8 @@ use App\Http\Controllers\Ajax\LocationController;
 Route::get('/', [TopController::class, 'index'])->name('top');
 
 // 物件（一覧・詳細）※ ResourceController
-Route::resource('properties', PropertyController::class)->only(['index', 'show']);
+Route::resource('properties', PropertyController::class)->only(['index','show']);
+
 
 // 物件検索（画面）
 Route::get('/search', [PropertyController::class, 'search'])->name('property.search');
