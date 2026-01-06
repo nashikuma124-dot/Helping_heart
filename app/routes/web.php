@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\InquiryManagementController;
 
 use App\Http\Controllers\Ajax\LocationController;
+use App\Http\Controllers\PropertyImageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,6 +34,10 @@ Route::get('/', [TopController::class, 'index'])->name('top');
 // 物件（一覧・詳細）※ ResourceController
 Route::resource('properties', PropertyController::class)->only(['index','show']);
 
+// ✅ 物件画像追加（会員のみ）
+Route::post('properties/{property}/images', [PropertyImageController::class, 'store'])
+  ->name('properties.images.store')
+  ->middleware('auth');
 
 // 物件検索（画面）
 Route::get('/search', [PropertyController::class, 'search'])->name('property.search');
