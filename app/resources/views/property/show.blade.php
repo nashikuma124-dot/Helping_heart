@@ -4,18 +4,24 @@
 @section('content')
 @php
   // =========================
-  // 画像（DB + dummy で補完）
+  // 画像準備（DB画像 + dummy補完）
   // =========================
-  $dbImages = $property->images->sortBy('sort_order')->pluck('image_path')->filter()->values()->all();
+  $dbImages = $property->images
+    ->sortBy('sort_order')
+    ->pluck('image_path')
+    ->filter()
+    ->values()
+    ->all();
 
   $dummyImages = [];
   for ($i = 1; $i <= 12; $i++) {
-    $dummyImages[] = "/images/dummy/property_{$i}.JPG"; // 実ファイルに合わせる
+    $dummyImages[] = "/images/dummy/property_{$i}.JPG";
   }
 
   $allImages = array_values(array_unique(array_merge($dbImages, $dummyImages)));
 
-  $visibleCount  = 8; // 最初に見せる枚数（6以上ならOK）
+  // まず見せる枚数（6枚以上）
+  $visibleCount  = 8;
   $visibleImages = array_slice($allImages, 0, $visibleCount);
   $hiddenImages  = array_slice($allImages, $visibleCount);
 
@@ -32,42 +38,45 @@
 
   $genderName = ($property->gender && $property->gender->name) ? $property->gender->name : '—';
 
-  // 障がい者区分（Propertyに relation がある前提）
-  $disabilityName = (isset($property->levelDisability) && $property->levelDisability && $property->levelDisability->name)
-      ? $property->levelDisability->name
-      : '—';
+  $areaName = ($property->area && $property->area->name) ? $property->area->name : '—';
+  $cityText = ($property->cities && $property->cities->count() > 0)
+              ? $property->cities->pluck('name')->filter()->implode(' / ')
+              : '';
+  $regionText = trim($areaName . ($cityText ? " / {$cityText}" : ""));
 
-  // 最寄り駅（properties）
-  $station = $property->nearest_station ?: '—';
+  $station = $property->nearest_station ? $property->nearest_station : '—';
   $walk    = is_null($property->walk_minutes) ? null : (int)$property->walk_minutes;
 
-  // 空室
   $vacantText = ((int)$property->availability === 1) ? 'あり' : 'なし';
 
-  // 金額（表示で使う）
-  $rent = (int)($property->rent ?? 0);
-
-  // ★「家賃以外の合計」表示（DBのsubtotalを使う想定）
-  // まだsubtotalが「合計」になってるなら、後で更新処理を入れて合わせる
-  $othersTotal = (int)($property->subtotal ?? 0);
+  // 「一覧へ戻る」：基本は直前へ。直前が詳細ページ等なら検索結果へ。
+  $backUrl = url()->previous();
+  if (is_string($backUrl) && preg_match('#/properties/\d+#', $backUrl)) {
+    $backUrl = route('property.result');
+  }
 @endphp
 
 <div class="container">
 
-  {{-- ヘッダー --}}
+  {{-- ▼ ヘッダー --}}
   <div class="border rounded-4 p-4 mb-4" style="background-color: LightYellow;">
     <div class="d-flex justify-content-between align-items-start">
       <div>
         <div class="fw-bold fs-4">{{ $property->title }}</div>
 
-        {{-- 指示：支払合計金額＝家賃 --}}
+        {{-- ここはあなたの現在仕様に合わせて表示（必要なら調整OK） --}}
         <div class="mt-1 text-secondary">
-          支払合計金額：<span class="fw-bold">{{ number_format($rent) }}円</span>
+          家賃：<span class="fw-bold">{{ number_format((int)$property->rent) }}円</span>
         </div>
 
-        {{-- 指示：ここは家賃以外の合計 --}}
+        {{-- 「家賃以外の費用合計」を出したい場合は subtotal を使う想定 --}}
         <div class="small text-secondary">
-          家賃以外の費用合計：<span class="fw-bold">{{ number_format($othersTotal) }}円</span>
+          家賃以外の費用合計：
+          <span class="fw-bold">{{ number_format((int)($property->subtotal ?? 0)) }}円</span>
+        </div>
+
+        <div class="small text-secondary mt-1">
+          地域：{{ $regionText ?: '—' }}
         </div>
       </div>
 
@@ -87,28 +96,38 @@
     </div>
   </div>
 
-  {{-- ✅ 画像ギャラリー（もっと見る / 会員のみ追加） --}}
+  {{-- ▼ 物件画像ギャラリー（6枚以上 + もっと見る + 会員のみ追加） --}}
   <div class="border rounded-4 p-3 mb-4 bg-white">
     <div class="row g-3">
+      {{-- 左：メイン画像 --}}
       <div class="col-lg-6">
         <div class="ratio ratio-4x3 border rounded-3 overflow-hidden bg-light">
-          <img id="mainImage" src="{{ $mainImage }}" alt="物件画像" class="w-100 h-100" style="object-fit:cover;">
+          <img id="mainImage"
+               src="{{ $mainImage }}"
+               alt="物件画像"
+               class="w-100 h-100"
+               style="object-fit:cover;">
         </div>
 
+        {{-- サムネ（メイン切替） --}}
         <div class="d-flex flex-wrap gap-2 mt-3">
           @foreach($visibleImages as $idx => $src)
             <button type="button"
                     class="p-0 border rounded-2 overflow-hidden bg-light"
                     style="width:72px; height:54px;"
-                    onclick="setMainImage('{{ $src }}')">
+                    onclick="setMainImage('{{ $src }}')"
+                    aria-label="画像{{ $idx+1 }}を表示">
               <img src="{{ $src }}" alt="サムネ" class="w-100 h-100" style="object-fit:cover;">
             </button>
           @endforeach
         </div>
       </div>
 
+      {{-- 右：3x3枠 --}}
       <div class="col-lg-6">
         <div class="row g-2">
+
+          {{-- 0-5（上段+中段） --}}
           @for($i=0; $i<6; $i++)
             @php $src = $visibleImages[$i] ?? null; @endphp
             <div class="col-4">
@@ -125,7 +144,7 @@
             </div>
           @endfor
 
-          {{-- 下段左 --}}
+          {{-- 下段左：7枚目 --}}
           @php $src7 = $visibleImages[6] ?? null; @endphp
           <div class="col-4">
             <div class="border rounded-3 overflow-hidden bg-light" style="height:110px;">
@@ -140,7 +159,7 @@
             </div>
           </div>
 
-          {{-- 下段真ん中：もっと見る --}}
+          {{-- 下段真ん中：もっと見る（未表示を前面にアップ） --}}
           <div class="col-4">
             <button type="button"
                     class="border rounded-3 bg-white w-100 h-100 d-flex flex-column align-items-center justify-content-center"
@@ -152,7 +171,7 @@
             </button>
           </div>
 
-          {{-- 下段右：会員のみ追加 --}}
+          {{-- 下段右：会員のみ画像追加 --}}
           <div class="col-4">
             @auth
               <form method="POST"
@@ -182,7 +201,7 @@
     </div>
   </div>
 
-  {{-- 未表示画像モーダル --}}
+  {{-- ▼ 未表示画像モーダル --}}
   <div class="modal fade" id="moreImagesModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
       <div class="modal-content">
@@ -212,45 +231,50 @@
     </div>
   </div>
 
-  {{-- 物件説明文 --}}
+  {{-- ▼ 物件説明文 --}}
   <div class="border rounded-4 p-4 mb-4 bg-white">
     <div class="fw-bold mb-2 text-center">物件説明文</div>
     <div class="text-secondary">
-      {{ $property->description ?: '—' }}
+      {{ $property->description ? $property->description : '—' }}
     </div>
   </div>
 
-  {{-- タグ（設計書のボタン群） --}}
-  <div class="border rounded-4 p-4 mb-4 bg-white">
-    <div class="d-flex flex-wrap gap-2 justify-content-center">
-      <span class="btn btn-outline-primary btn-sm">
-        事業種：
-        {{ $businessNames->isNotEmpty() ? $businessNames->implode(' / ') : '—' }}
-      </span>
+  {{-- ▼ タグ表示：外側は白／中の各ボックスを PaleGreen --}}
+<div class="border rounded-4 p-4 mb-4 bg-white">
+  <div class="d-flex flex-wrap gap-2 justify-content-center">
 
-      <span class="btn btn-outline-primary btn-sm">
-        障害支援区分：
-        {{ $disabilityName }}
-      </span>
-
-      <span class="btn btn-outline-primary btn-sm">
-        受入性別：
-        {{ $genderName }}
-      </span>
-
-      <span class="btn btn-outline-primary btn-sm">
-        建物タイプ：
-        {{ $buildingNames->isNotEmpty() ? $buildingNames->implode(' / ') : '—' }}
-      </span>
-
-      <span class="btn btn-outline-primary btn-sm">
-        その他特徴：
-        {{ $featureNames->isNotEmpty() ? $featureNames->implode(' / ') : '—' }}
-      </span>
+    <div class="px-3 py-2 border rounded-3" style="background-color: PaleGreen;">
+      <span class="fw-bold">事業種：</span>
+      {{ $businessNames->isNotEmpty() ? $businessNames->implode(' / ') : '—' }}
     </div>
-  </div>
 
-  {{-- 下段の表 --}}
+    <div class="px-3 py-2 border rounded-3" style="background-color: PaleGreen;">
+      <span class="fw-bold">障害支援区分：</span>
+      {{ ($property->levelDisability && $property->levelDisability->name)
+          ? $property->levelDisability->name
+          : '—' }}
+    </div>
+
+    <div class="px-3 py-2 border rounded-3" style="background-color: PaleGreen;">
+      <span class="fw-bold">受入性別：</span>
+      {{ $genderName }}
+    </div>
+
+    <div class="px-3 py-2 border rounded-3" style="background-color: PaleGreen;">
+      <span class="fw-bold">建物タイプ：</span>
+      {{ $buildingNames->isNotEmpty() ? $buildingNames->implode(' / ') : '—' }}
+    </div>
+
+    <div class="px-3 py-2 border rounded-3" style="background-color: PaleGreen;">
+      <span class="fw-bold">その他特徴：</span>
+      {{ $featureNames->isNotEmpty() ? $featureNames->implode(' / ') : '—' }}
+    </div>
+
+  </div>
+</div>
+
+
+  {{-- ▼ 下段の表 --}}
   <div class="border rounded-4 overflow-hidden mb-4 bg-white">
     <div class="row g-0">
       <div class="col-6 border-end border-bottom p-3">
@@ -314,13 +338,20 @@
     </div>
   </div>
 
-  {{-- 問い合わせ --}}
+  {{-- ▼ お問い合わせ + 一覧へ戻る（★ここが要望箇所） --}}
   <div class="text-center mb-5">
     <a class="btn px-5 text-white"
        style="background-color:#ff9800;"
        href="{{ route('inquiries.create', $property->id) }}">
       お問い合わせはこちら
     </a>
+
+    <div class="mt-3">
+      <a class="btn btn-outline-secondary px-5"
+         href="{{ $backUrl }}">
+        一覧へ戻る
+      </a>
+    </div>
   </div>
 
 </div>
