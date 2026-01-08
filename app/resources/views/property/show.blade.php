@@ -97,7 +97,7 @@
   </div>
 
   {{-- ▼ 物件画像ギャラリー（6枚以上 + もっと見る + 会員のみ追加） --}}
-  <div class="border rounded-4 p-3 mb-4 bg-white">
+  <div class="border rounded-4 p-3 mb-4" style="background-color: LightYellow;">
     <div class="row g-3">
       {{-- 左：メイン画像 --}}
       <div class="col-lg-6">
@@ -232,7 +232,7 @@
   </div>
 
   {{-- ▼ 物件説明文 --}}
-  <div class="border rounded-4 p-4 mb-4 bg-white">
+  <div class="border rounded-4 p-4 mb-4" style="background-color: LightYellow;">
     <div class="fw-bold mb-2 text-center">物件説明文</div>
     <div class="text-secondary">
       {{ $property->description ? $property->description : '—' }}
@@ -240,7 +240,7 @@
   </div>
 
   {{-- ▼ タグ表示：外側は白／中の各ボックスを PaleGreen --}}
-<div class="border rounded-4 p-4 mb-4 bg-white">
+<div class="border rounded-4 p-4 mb-4" style="background-color: LightYellow;">
   <div class="d-flex flex-wrap gap-2 justify-content-center">
 
     <div class="px-3 py-2 border rounded-3" style="background-color: PaleGreen;">
@@ -275,7 +275,7 @@
 
 
   {{-- ▼ 下段の表 --}}
-  <div class="border rounded-4 overflow-hidden mb-4 bg-white">
+  <div class="border rounded-4 overflow-hidden mb-4" style="background-color: LightYellow;">
     <div class="row g-0">
       <div class="col-6 border-end border-bottom p-3">
         <div class="text-secondary small">家賃</div>
