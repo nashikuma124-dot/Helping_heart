@@ -40,3 +40,8 @@
   </div>
 </div>
 @endsection
+{{-- 確認用 --}}
+<div style="position:fixed;top:0;left:0;background:red;color:white;z-index:9999;">
+  TOP VIEW
+</div>
+
