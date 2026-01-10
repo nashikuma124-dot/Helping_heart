@@ -70,8 +70,7 @@ class PropertyController extends Controller
     // 検索結果（get()混入なし：paginateだけ）
     public function result(Request $request)
     {
-        dd($request->input('area_id'), $request->input('city_ids'));
-
+        
     // 配列系は先に正規化（空文字混入・型ブレ防止）
         $areaId       = $request->filled('area_id') ? (int)$request->input('area_id') : null;
         $cityIds      = array_values(array_filter(array_map('intval', (array)$request->input('city_ids', []))));

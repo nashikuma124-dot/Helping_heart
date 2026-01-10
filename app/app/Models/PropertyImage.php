@@ -8,16 +8,16 @@ class PropertyImage extends Model
 {
     protected $table = 'property_images';
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     protected $fillable = [
         'property_id',
-        'path',
+        'image_path',
         'sort_order',
     ];
 
     public function property()
     {
-        return $this->belongsTo(Property::class);
+        return $this->belongsTo(Property::class, 'property_id');
     }
 }

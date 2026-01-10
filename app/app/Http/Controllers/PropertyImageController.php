@@ -1,25 +1,43 @@
 <?php
 
-namespace App\Models;
+namespace App\Http\Controllers;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\Property;
+use App\Models\PropertyImage;
+use Illuminate\Http\Request;
 
-class PropertyImage extends Model
+class PropertyImageController extends Controller
 {
-    protected $table = 'property_images';
-
-    // 画像テーブルは created_at / updated_at がある前提（無いなら false にしてください）
-    public $timestamps = true;
-
-    protected $fillable = [
-        'property_id',
-        'image_path',
-        'sort_order',
-    ];
-
-    // 物件（properties）
-    public function property()
+    /**
+     * 物件画像アップロード
+     * POST /properties/{property}/images
+     */
+    public function store(Request $request, Property $property)
     {
-        return $this->belongsTo(Property::class, 'property_id');
+        $validated = $request->validate(
+            [
+                'image'      => ['required', 'file', 'image', 'max:5120'], // 5MB
+                'sort_order' => ['nullable', 'integer', 'min:0'],
+            ],
+            [
+                'image.required' => '画像を選択してください。',
+                'image.image'    => '画像ファイルを選択してください。',
+                'image.max'      => '画像サイズは5MB以内にしてください。',
+            ]
+        );
+
+        $path = $request->file('image')->store("properties/{$property->id}", 'public');
+
+        $sortOrder = array_key_exists('sort_order', $validated)
+            ? (int)$validated['sort_order']
+            : ((int) PropertyImage::where('property_id', $property->id)->max('sort_order') + 1);
+
+        PropertyImage::create([
+            'property_id' => $property->id,
+            'image_path'  => $path,
+            'sort_order'  => $sortOrder,
+        ]);
+
+        return back()->with('success', '画像を追加しました。');
     }
 }

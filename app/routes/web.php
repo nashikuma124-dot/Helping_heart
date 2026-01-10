@@ -32,12 +32,12 @@ use App\Http\Controllers\PropertyImageController;
 Route::get('/', [TopController::class, 'index'])->name('top');
 
 // 物件（一覧・詳細）※ ResourceController
-Route::resource('properties', PropertyController::class)->only(['index','show']);
+Route::resource('properties', PropertyController::class)->only(['index', 'show']);
 
 // ✅ 物件画像追加（会員のみ）
 Route::post('properties/{property}/images', [PropertyImageController::class, 'store'])
-  ->name('properties.images.store')
-  ->middleware('auth');
+    ->name('properties.images.store')
+    ->middleware('auth');
 
 // 物件検索（画面）
 Route::get('/search', [PropertyController::class, 'search'])->name('property.search');
@@ -48,10 +48,11 @@ Route::get('/result', [PropertyController::class, 'result'])->name('property.res
 // Ajax：都道府県→市区町村
 Route::get('/ajax/cities', [LocationController::class, 'cities'])->name('ajax.cities');
 
-// お問い合わせ（確認画面ありのため一部手動）
+// お問い合わせ
 Route::get('inquiries/{property}', [InquiryController::class, 'create'])->name('inquiries.create');
 Route::post('inquiries/confirm', [InquiryController::class, 'confirm'])->name('inquiries.confirm');
 Route::post('inquiries', [InquiryController::class, 'store'])->name('inquiries.store');
+
 
 // エラー画面
 Route::view('/error', 'error')->name('error');
@@ -65,6 +66,7 @@ Route::view('/error', 'error')->name('error');
 // 会員登録
 Route::get('/signup', [RegisterController::class, 'show'])->name('signup');
 Route::post('/signup/confirm', [RegisterController::class, 'confirm'])->name('signup.confirm');
+Route::post('/signup/back', [RegisterController::class, 'back'])->name('signup.back');
 Route::post('/signup/complete', [RegisterController::class, 'complete'])->name('signup.complete');
 
 // ログイン（メール）
@@ -78,6 +80,7 @@ Route::post('/logout', function (Request $request) {
     $request->session()->regenerateToken();
     return redirect()->route('top');
 })->name('logout');
+
 
 // LINEログイン
 Route::get('/login/line', [LineLoginController::class, 'redirect'])->name('line.login');

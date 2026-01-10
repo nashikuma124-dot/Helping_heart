@@ -5,9 +5,11 @@
 <h1 class="fw-bold mb-3">会員登録 入力内容確認</h1>
 
 @php
-  $email = old('email', request('email',''));
-  $name  = old('name', request('name',''));
-  $dob   = old('dob', request('dob',''));
+  // Controllerで session('signup') に入れている想定
+  $signup = session('signup', []);
+  $email = $signup['email'] ?? '';
+  $name  = $signup['name'] ?? '';
+  $dob   = $signup['dob'] ?? '';
 @endphp
 
 <div class="p-4 bg-white border rounded-4" style="max-width:720px; margin:auto;">
@@ -35,17 +37,25 @@
   </div>
 
   <div class="d-flex flex-wrap gap-2 justify-content-center mt-3">
-    <a class="btn btn-outline-secondary" href="{{ url()->previous() }}">入力に戻る</a>
 
-    <form method="POST" action="{{ route('signup.complete') }}">
-      @csrf
-      <input type="hidden" name="email" value="{{ $email }}">
-      <input type="hidden" name="password" value="{{ old('password', request('password','')) }}">
-      <input type="hidden" name="password_confirmation" value="{{ old('password_confirmation', request('password_confirmation','')) }}">
-      <input type="hidden" name="name" value="{{ $name }}">
-      <input type="hidden" name="dob" value="{{ $dob }}">
-      <button class="btn btn-primary">登録</button>
+    {{-- ✅ 入力画面へ戻る（入力保持） --}}
+    <form method="POST" action="{{ route('signup.back') }}" class="d-inline">
+        @csrf
+        <input type="hidden" name="email" value="{{ $email }}">
+        <input type="hidden" name="name" value="{{ $name }}">
+        <input type="hidden" name="dob" value="{{ $dob }}">
+        <button type="submit" class="btn btn-outline-secondary">入力に戻る</button>
     </form>
+
+
+    {{-- ✅ 登録（sessionの内容で登録する。passwordをhiddenで渡さない） --}}
+    <form method="POST" action="{{ route('signup.complete') }}">
+        @csrf
+        <!-- hiddenたち -->
+        <button class="btn btn-primary">登録</button>
+    </form>
+
+
   </div>
 </div>
 @endsection
