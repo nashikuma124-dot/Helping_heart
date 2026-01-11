@@ -2,23 +2,67 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Property;
+use Illuminate\Http\Request;
+
 class FavoriteController extends Controller
 {
-    // 一覧
+    // お気に入り一覧
     public function index()
     {
-        return view('mypage.favorite');
+        $user = auth()->user();
+
+        $properties = $user->favoriteProperties()
+            ->with(['images', 'area', 'gender', 'cities'])
+            ->latest('properties.id')
+            ->paginate(10);
+
+        return view('favorites.index', compact('properties'));
     }
 
-    // 登録（仮）
-    public function store($property)
+    // お気に入り登録（AJAX）
+    public function store(Request $request, Property $property)
     {
-        return back();
+        $user = $request->user();
+
+        $already = $user->favoriteProperties()
+            ->where('properties.id', $property->id)
+            ->exists();
+
+        if (!$already) {
+            $user->favoriteProperties()->syncWithoutDetaching([$property->id]);
+        }
+
+        // AJAXならJSON
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'ok'        => true,
+                'favorited' => true,
+                'message'   => $already ? 'お気に入り登録済みです。' : 'お気に入りに登録されました',
+            ]);
+        }
+
+        // 通常アクセスなら戻す
+        return back()->with('success', $already ? 'お気に入り登録済みです。' : 'お気に入りに登録されました');
     }
 
-    // 削除（仮）
-    public function destroy($property)
+    // ✅ お気に入り解除（DELETE）
+    public function destroy(Request $request, Property $property)
     {
-        return back();
+        $user = $request->user();
+
+        // pivot削除
+        $user->favoriteProperties()->detach($property->id);
+
+        // AJAXならJSON
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'ok'        => true,
+                'favorited' => false,
+                'message'   => 'お気に入りを解除しました',
+            ]);
+        }
+
+        return back()->with('success', 'お気に入りを解除しました');
     }
 }

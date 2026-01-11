@@ -4,22 +4,17 @@ namespace App;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable
 {
-    use Notifiable, SoftDeletes;
-
-    const ROLE_ADMIN = 'admin';
-    const ROLE_USER  = 'user';
+    use Notifiable;
 
     protected $fillable = [
         'name',
         'email',
         'password',
+        'dob',      // or dateofbirth のどちらか（DB列名に合わせる）
         'line_id',
-        'line_access_token',
-        'role',
     ];
 
     protected $hidden = [
@@ -27,31 +22,16 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-    ];
-
-    /* relations */
-
-    public function favorites()
+    /**
+     * ✅ お気に入りした物件（favoritesテーブル経由）
+     */
+    public function favoriteProperties()
     {
-        return $this->hasMany(Favorite::class);
-    }
-
-    public function inquiries()
-    {
-        return $this->hasMany(Inquiry::class);
-    }
-
-    public function consultations()
-    {
-        return $this->hasMany(Consultation::class);
-    }
-
-    /* helpers */
-
-    public function isAdmin()
-    {
-        return $this->role === self::ROLE_ADMIN;
+        return $this->belongsToMany(
+            \App\Models\Property::class,
+            'favorites',
+            'user_id',
+            'property_id'
+        );
     }
 }

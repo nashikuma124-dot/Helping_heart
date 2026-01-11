@@ -20,7 +20,6 @@
 
   $allImages = array_values(array_unique(array_merge($dbImages, $dummyImages)));
 
-  // まず見せる枚数（6枚以上）
   $visibleCount  = 8;
   $visibleImages = array_slice($allImages, 0, $visibleCount);
   $hiddenImages  = array_slice($allImages, $visibleCount);
@@ -49,7 +48,6 @@
 
   $vacantText = ((int)$property->availability === 1) ? 'あり' : 'なし';
 
-  // 「一覧へ戻る」：基本は直前へ。直前が詳細ページ等なら検索結果へ。
   $backUrl = url()->previous();
   if (is_string($backUrl) && preg_match('#/properties/\d+#', $backUrl)) {
     $backUrl = route('property.result');
@@ -64,12 +62,10 @@
       <div>
         <div class="fw-bold fs-4">{{ $property->title }}</div>
 
-        {{-- ここはあなたの現在仕様に合わせて表示（必要なら調整OK） --}}
         <div class="mt-1 text-secondary">
           家賃：<span class="fw-bold">{{ number_format((int)$property->rent) }}円</span>
         </div>
 
-        {{-- 「家賃以外の費用合計」を出したい場合は subtotal を使う想定 --}}
         <div class="small text-secondary">
           家賃以外の費用合計：
           <span class="fw-bold">{{ number_format((int)($property->subtotal ?? 0)) }}円</span>
@@ -80,26 +76,45 @@
         </div>
       </div>
 
-      <div class="text-end">
-        <div class="mb-2">
-          @auth
-            <form method="POST" action="{{ route('favorites.store', $property->id) }}">
-              @csrf
-              <button class="btn btn-outline-secondary btn-sm">お気に入り登録☆</button>
-            </form>
-          @else
-            <a class="btn btn-outline-secondary btn-sm" href="{{ route('login') }}">お気に入り登録☆</a>
-          @endauth
-        </div>
-        <div class="small text-secondary">掲載日：{{ $postedAt }}</div>
-      </div>
+      {{-- ✅ お気に入り（AJAXのみ / 遷移しない） --}}
+@auth
+  @php
+    $isFav = auth()->user()
+      ->favoriteProperties()
+      ->where('properties.id', $property->id)
+      ->exists();
+  @endphp
+
+  <div class="text-end">
+    <div id="favMsg" class="small mb-2" style="display:none;"></div>
+
+    <button
+      type="button"
+      id="favBtn"
+      class="btn btn-sm {{ $isFav ? 'btn-dark' : 'btn-outline-secondary' }}"
+      data-url="{{ route('favorites.store', $property->id) }}"
+      {{ $isFav ? 'disabled' : '' }}
+    >
+      {{ $isFav ? '★ お気に入り' : '☆ お気に入り' }}
+    </button>
+
+    <div class="small text-secondary mt-2">掲載日：{{ $postedAt }}</div>
+  </div>
+@else
+  <div class="text-end">
+    <a class="btn btn-outline-secondary btn-sm" href="{{ route('login') }}">☆ お気に入り</a>
+    <div class="small text-secondary mt-2">掲載日：{{ $postedAt }}</div>
+  </div>
+@endauth
+
+
+
     </div>
   </div>
 
-  {{-- ▼ 物件画像ギャラリー（6枚以上 + もっと見る + 会員のみ追加） --}}
+  {{-- ▼ 物件画像ギャラリー --}}
   <div class="border rounded-4 p-3 mb-4" style="background-color: LightYellow;">
     <div class="row g-3">
-      {{-- 左：メイン画像 --}}
       <div class="col-lg-6">
         <div class="ratio ratio-4x3 border rounded-3 overflow-hidden bg-light">
           <img id="mainImage"
@@ -109,7 +124,6 @@
                style="object-fit:cover;">
         </div>
 
-        {{-- サムネ（メイン切替） --}}
         <div class="d-flex flex-wrap gap-2 mt-3">
           @foreach($visibleImages as $idx => $src)
             <button type="button"
@@ -123,11 +137,8 @@
         </div>
       </div>
 
-      {{-- 右：3x3枠 --}}
       <div class="col-lg-6">
         <div class="row g-2">
-
-          {{-- 0-5（上段+中段） --}}
           @for($i=0; $i<6; $i++)
             @php $src = $visibleImages[$i] ?? null; @endphp
             <div class="col-4">
@@ -144,7 +155,6 @@
             </div>
           @endfor
 
-          {{-- 下段左：7枚目 --}}
           @php $src7 = $visibleImages[6] ?? null; @endphp
           <div class="col-4">
             <div class="border rounded-3 overflow-hidden bg-light" style="height:110px;">
@@ -159,7 +169,6 @@
             </div>
           </div>
 
-          {{-- 下段真ん中：もっと見る（未表示を前面にアップ） --}}
           <div class="col-4">
             <button type="button"
                     class="border rounded-3 bg-white w-100 h-100 d-flex flex-column align-items-center justify-content-center"
@@ -171,7 +180,6 @@
             </button>
           </div>
 
-          {{-- 下段右：会員のみ画像追加 --}}
           <div class="col-4">
             @auth
               <form method="POST"
@@ -239,40 +247,35 @@
     </div>
   </div>
 
-  {{-- ▼ タグ表示：外側は白／中の各ボックスを PaleGreen --}}
-<div class="border rounded-4 p-4 mb-4" style="background-color: LightYellow;">
-  <div class="d-flex flex-wrap gap-2 justify-content-center">
+  {{-- ▼ タグ表示 --}}
+  <div class="border rounded-4 p-4 mb-4" style="background-color: LightYellow;">
+    <div class="d-flex flex-wrap gap-2 justify-content-center">
+      <div class="px-3 py-2 border rounded-3" style="background-color: PaleGreen;">
+        <span class="fw-bold">事業種：</span>
+        {{ $businessNames->isNotEmpty() ? $businessNames->implode(' / ') : '—' }}
+      </div>
 
-    <div class="px-3 py-2 border rounded-3" style="background-color: PaleGreen;">
-      <span class="fw-bold">事業種：</span>
-      {{ $businessNames->isNotEmpty() ? $businessNames->implode(' / ') : '—' }}
+      <div class="px-3 py-2 border rounded-3" style="background-color: PaleGreen;">
+        <span class="fw-bold">障害支援区分：</span>
+        {{ ($property->levelDisability && $property->levelDisability->name) ? $property->levelDisability->name : '—' }}
+      </div>
+
+      <div class="px-3 py-2 border rounded-3" style="background-color: PaleGreen;">
+        <span class="fw-bold">受入性別：</span>
+        {{ $genderName }}
+      </div>
+
+      <div class="px-3 py-2 border rounded-3" style="background-color: PaleGreen;">
+        <span class="fw-bold">建物タイプ：</span>
+        {{ $buildingNames->isNotEmpty() ? $buildingNames->implode(' / ') : '—' }}
+      </div>
+
+      <div class="px-3 py-2 border rounded-3" style="background-color: PaleGreen;">
+        <span class="fw-bold">その他特徴：</span>
+        {{ $featureNames->isNotEmpty() ? $featureNames->implode(' / ') : '—' }}
+      </div>
     </div>
-
-    <div class="px-3 py-2 border rounded-3" style="background-color: PaleGreen;">
-      <span class="fw-bold">障害支援区分：</span>
-      {{ ($property->levelDisability && $property->levelDisability->name)
-          ? $property->levelDisability->name
-          : '—' }}
-    </div>
-
-    <div class="px-3 py-2 border rounded-3" style="background-color: PaleGreen;">
-      <span class="fw-bold">受入性別：</span>
-      {{ $genderName }}
-    </div>
-
-    <div class="px-3 py-2 border rounded-3" style="background-color: PaleGreen;">
-      <span class="fw-bold">建物タイプ：</span>
-      {{ $buildingNames->isNotEmpty() ? $buildingNames->implode(' / ') : '—' }}
-    </div>
-
-    <div class="px-3 py-2 border rounded-3" style="background-color: PaleGreen;">
-      <span class="fw-bold">その他特徴：</span>
-      {{ $featureNames->isNotEmpty() ? $featureNames->implode(' / ') : '—' }}
-    </div>
-
   </div>
-</div>
-
 
   {{-- ▼ 下段の表 --}}
   <div class="border rounded-4 overflow-hidden mb-4" style="background-color: LightYellow;">
@@ -338,35 +341,93 @@
     </div>
   </div>
 
-  {{-- ▼ お問い合わせ + 一覧へ戻る（★ここが要望箇所） --}}
+  {{-- ▼ お問い合わせ + 一覧へ戻る --}}
   <div class="text-center mb-5">
-    <a class="btn px-5 text-white"
-       style="background-color:#ff9800;"
+    <a class="btn px-5 text-white" style="background-color:#ff9800;"
        href="{{ route('inquiries.create', $property->id) }}">
       お問い合わせはこちら
     </a>
 
     <div class="mt-3">
-      <a class="btn btn-outline-secondary px-5"
-         href="{{ $backUrl }}">
+      <a class="btn btn-outline-secondary px-5" href="{{ $backUrl }}">
         一覧へ戻る
       </a>
     </div>
   </div>
 
 </div>
-
+{{-- ✅ このページ内に直書き（@pushは使わない） --}}
 <script>
-  function setMainImage(src) {
-    const el = document.getElementById('mainImage');
-    if (el) el.src = src;
-  }
+(function () {
+  document.addEventListener('DOMContentLoaded', function () {
+    const btn = document.getElementById('favBtn');
+    const msg = document.getElementById('favMsg');
 
-  function closeMoreImagesModal() {
-    const modalEl = document.getElementById('moreImagesModal');
-    if (!modalEl) return;
-    const modal = bootstrap.Modal.getInstance(modalEl);
-    if (modal) modal.hide();
-  }
+    if (!btn || !msg) return;
+
+    btn.addEventListener('click', async function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // 初期化
+      msg.style.display = 'none';
+      msg.className = 'small mb-2';
+
+      btn.disabled = true;
+
+      try {
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        const url = btn.dataset.url;
+
+        const res = await fetch(url, {
+          method: 'POST',
+          credentials: 'same-origin', // ✅ セッションCookieを必ず送る
+          headers: {
+            'X-CSRF-TOKEN': csrf,
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+          },
+        });
+
+        const ct = res.headers.get('content-type') || '';
+
+        // JSONが返ってない（=ログイン画面HTML/エラーHTML等）を検知
+        if (!ct.includes('application/json')) {
+          msg.className = 'small text-danger mb-2';
+          msg.textContent = 'お気に入り登録に失敗しました（JSON応答ではありません）';
+          msg.style.display = 'block';
+          btn.disabled = false;
+          return;
+        }
+
+        const data = await res.json();
+
+        if (!res.ok || !data.ok) {
+          msg.className = 'small text-danger mb-2';
+          msg.textContent = data.message || 'お気に入り登録に失敗しました';
+          msg.style.display = 'block';
+          btn.disabled = false;
+          return;
+        }
+
+        // ✅ 成功：★黒 + メッセージ
+        btn.classList.remove('btn-outline-secondary');
+        btn.classList.add('btn-dark');
+        btn.textContent = '★ お気に入り';
+        btn.disabled = true;
+
+        msg.className = 'small text-success mb-2';
+        msg.textContent = data.message || 'お気に入りに登録されました';
+        msg.style.display = 'block';
+
+      } catch (err) {
+        msg.className = 'small text-danger mb-2';
+        msg.textContent = 'お気に入り登録に失敗しました';
+        msg.style.display = 'block';
+        btn.disabled = false;
+      }
+    });
+  });
+})();
 </script>
-@endsection
+@endpush

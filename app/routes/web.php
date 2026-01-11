@@ -102,15 +102,17 @@ Route::post('/password/reset/complete', [LoginController::class, 'complete'])->n
 
 Route::middleware('auth')->group(function () {
 
-    // マイページ（ResourceController）
+    // マイページ
     Route::resource('mypage', MyPageController::class)->only(['index', 'edit', 'update']);
 
-    // 会員情報（追加）
+    // 会員情報
     Route::get('/user', [MyPageController::class, 'show'])->name('user.info');
     Route::post('/user/delete', [MyPageController::class, 'delete'])->name('user.delete');
 
-    // お気に入り
-    Route::resource('favorites', FavoriteController::class)->only(['index', 'store', 'destroy']);
+    // ✅ お気に入り（会員のみ）
+    Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
+    Route::post('/favorites/{property}', [FavoriteController::class, 'store'])->name('favorites.store');
+    Route::delete('/favorites/{property}', [FavoriteController::class, 'destroy'])->name('favorites.destroy');
 
     // チャット相談
     Route::prefix('consultation')->name('consultation.')->group(function () {
@@ -121,6 +123,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/welfare/chat', [ConsultationController::class, 'welfareChat'])->name('welfare.chat');
     });
 });
+
 
 /*
 |--------------------------------------------------------------------------

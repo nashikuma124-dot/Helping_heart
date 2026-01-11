@@ -100,12 +100,12 @@ class Property extends Model
         return $this->hasMany(PropertyImage::class, 'property_id');
     }
 
-    // お気に入り（favorites）
-    public function favorites()
+    // app/Models/Property.php に追記
+    public function favoriteUsers()
     {
-        return $this->hasMany(Favorite::class, 'property_id');
+        return $this->belongsToMany(\App\Models\User::class, 'favorites', 'property_id', 'user_id');
     }
-
+    
     // 障がい者区分（level_disability）
     public function levelDisability()
     {
