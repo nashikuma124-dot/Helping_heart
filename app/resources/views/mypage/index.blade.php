@@ -32,11 +32,10 @@
         </a>
 
         {{-- ④ 会員情報 --}}
-        <a href="{{ route('user.info') }}"
-           class="btn btn-outline-secondary py-4 fw-bold rounded-3"
-           style="border-width:2px;">
-          ④会員情報
+        <a href="{{ route('user.info') }}" class="btn btn-primary">
+            会員情報
         </a>
+
 
       </div>
     </div>

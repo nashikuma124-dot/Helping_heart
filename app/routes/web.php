@@ -31,10 +31,10 @@ use App\Http\Controllers\PropertyImageController;
 // トップページ
 Route::get('/', [TopController::class, 'index'])->name('top');
 
-// 物件（一覧・詳細）※ ResourceController
+// 物件（一覧・詳細）
 Route::resource('properties', PropertyController::class)->only(['index', 'show']);
 
-// ✅ 物件画像追加（会員のみ）
+// 物件画像追加（会員のみ）
 Route::post('properties/{property}/images', [PropertyImageController::class, 'store'])
     ->name('properties.images.store')
     ->middleware('auth');
@@ -52,7 +52,6 @@ Route::get('/ajax/cities', [LocationController::class, 'cities'])->name('ajax.ci
 Route::get('inquiries/{property}', [InquiryController::class, 'create'])->name('inquiries.create');
 Route::post('inquiries/confirm', [InquiryController::class, 'confirm'])->name('inquiries.confirm');
 Route::post('inquiries', [InquiryController::class, 'store'])->name('inquiries.store');
-
 
 // エラー画面
 Route::view('/error', 'error')->name('error');
@@ -81,7 +80,6 @@ Route::post('/logout', function (Request $request) {
     return redirect()->route('top');
 })->name('logout');
 
-
 // LINEログイン
 Route::get('/login/line', [LineLoginController::class, 'redirect'])->name('line.login');
 Route::get('/login/line/callback', [LineLoginController::class, 'callback']);
@@ -102,12 +100,18 @@ Route::post('/password/reset/complete', [LoginController::class, 'complete'])->n
 
 Route::middleware('auth')->group(function () {
 
-    // マイページ
-    Route::resource('mypage', MyPageController::class)->only(['index', 'edit', 'update']);
+    // ✅ マイページ（index/edit だけ resource を使う）
+    Route::resource('mypage', MyPageController::class)->only(['index', 'edit']);
 
-    // 会員情報
+    // ✅ 会員情報
     Route::get('/user', [MyPageController::class, 'show'])->name('user.info');
     Route::post('/user/delete', [MyPageController::class, 'delete'])->name('user.delete');
+
+    // ✅ 会員情報 編集→確認
+    Route::post('/mypage/edit/confirm', [MyPageController::class, 'confirm'])->name('mypage.edit.confirm');
+
+    // ✅ 確認→登録（POSTで更新するルートを追加）
+    Route::post('/mypage/update', [MyPageController::class, 'update'])->name('mypage.update');
 
     // ✅ お気に入り（会員のみ）
     Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
@@ -124,7 +128,6 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-
 /*
 |--------------------------------------------------------------------------
 | 管理者
@@ -133,7 +136,7 @@ Route::middleware('auth')->group(function () {
 
 Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
 
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
 
     Route::resource('properties', PropertyManagementController::class)->only(['index', 'show', 'edit', 'update']);
     Route::resource('users', UserManagementController::class)->only(['index', 'show']);
