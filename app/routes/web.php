@@ -22,6 +22,9 @@ use App\Http\Controllers\Admin\InquiryManagementController;
 use App\Http\Controllers\Ajax\LocationController;
 use App\Http\Controllers\PropertyImageController;
 
+// ✅ 追加：パスワード再設定コントローラ
+use App\Http\Controllers\Auth\PwdResetController;
+
 /*
 |--------------------------------------------------------------------------
 | 共通（ログイン不要）
@@ -33,11 +36,6 @@ Route::get('/', [TopController::class, 'index'])->name('top');
 
 // 物件（一覧・詳細）
 Route::resource('properties', PropertyController::class)->only(['index', 'show']);
-
-// 物件画像追加（会員のみ）
-Route::post('properties/{property}/images', [PropertyImageController::class, 'store'])
-    ->name('properties.images.store')
-    ->middleware('auth');
 
 // 物件検索（画面）
 Route::get('/search', [PropertyController::class, 'search'])->name('property.search');
@@ -53,8 +51,42 @@ Route::get('inquiries/{property}', [InquiryController::class, 'create'])->name('
 Route::post('inquiries/confirm', [InquiryController::class, 'confirm'])->name('inquiries.confirm');
 Route::post('inquiries', [InquiryController::class, 'store'])->name('inquiries.store');
 
+
+/*
+|--------------------------------------------------------------------------
+| ✅ パスワード再設定（ログイン不要）
+|--------------------------------------------------------------------------
+| ②メール送信 → メールリンク → pwd_form.blade.php → パスワード更新 → 完了画面
+|
+| ※ 既存の /auth/pwd_reset を残す場合は name('password.request') が被るので
+|    そのルートは削除/コメントアウトしてください。
+*/
+
+// ②メール送信画面
+Route::get('/password/forgot', [PwdResetController::class, 'showRequestForm'])
+    ->name('password.request');
+
+// ②メール送信（リンク送信）
+Route::post('/password/email', [PwdResetController::class, 'sendResetLink'])
+    ->name('password.email');
+
+// メールのリンクから再設定フォーム表示（resources/views/auth/pwd_form.blade.php）
+Route::get('/password/reset/{token}', [PwdResetController::class, 'showResetForm'])
+    ->name('password.reset');
+
+// 新パスワード登録（更新）
+Route::post('/password/reset', [PwdResetController::class, 'resetPassword'])
+    ->name('password.update');
+
+// ✅ 追加：パスワード再設定 完了画面（ログイン不要）
+Route::get('/password/complete', function () {
+    return view('auth.pwd_comp');
+})->name('password.complete');
+
+
 // エラー画面
 Route::view('/error', 'error')->name('error');
+
 
 /*
 |--------------------------------------------------------------------------
@@ -70,7 +102,7 @@ Route::post('/signup/complete', [RegisterController::class, 'complete'])->name('
 
 // ログイン（メール）
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [LoginController::class, 'login']);
+Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 
 // ログアウト
 Route::post('/logout', function (Request $request) {
@@ -82,15 +114,18 @@ Route::post('/logout', function (Request $request) {
 
 // LINEログイン
 Route::get('/login/line', [LineLoginController::class, 'redirect'])->name('line.login');
-Route::get('/login/line/callback', [LineLoginController::class, 'callback']);
+Route::get('/login/line/callback', [LineLoginController::class, 'callback'])->name('line.callback');
 Route::get('/line/complete', [LineLoginController::class, 'complete'])->name('line.complete');
 Route::get('/line/error', [LineLoginController::class, 'error'])->name('line.error');
 
-// パスワード再設定
-Route::get('/password/reset', [LoginController::class, 'reset'])->name('password.request');
-Route::post('/password/reset', [LoginController::class, 'send']);
-Route::get('/password/reset/form/{token}', [LoginController::class, 'form'])->name('password.form');
-Route::post('/password/reset/complete', [LoginController::class, 'complete'])->name('password.complete');
+/**
+ * ❌ ここは削除（LoginController::reset が存在しないため）
+ * Route::get('/password/reset', [LoginController::class, 'reset'])->name('password.request');
+ * Route::post('/password/reset', [LoginController::class, 'send'])->name('password.send');
+ * Route::get('/password/reset/form/{token}', [LoginController::class, 'form'])->name('password.form');
+ * Route::post('/password/reset/complete', [LoginController::class, 'complete'])->name('password.complete');
+ */
+
 
 /*
 |--------------------------------------------------------------------------
@@ -100,23 +135,35 @@ Route::post('/password/reset/complete', [LoginController::class, 'complete'])->n
 
 Route::middleware('auth')->group(function () {
 
-    // ✅ マイページ（index/edit だけ resource を使う）
+    // 会員情報ページ
+    Route::get('/user', [MyPageController::class, 'show'])->name('user.info');
+
+    // ✅ 退会確認画面（GET）
+    Route::get('/user/delete/confirm', [MyPageController::class, 'deleteConfirm'])
+        ->name('user.delete.confirm');
+
+    // ✅ 退会実行（POST）
+    Route::post('/user/delete', [MyPageController::class, 'delete'])
+        ->name('user.delete');
+
+    // マイページ（index / edit）
     Route::resource('mypage', MyPageController::class)->only(['index', 'edit']);
 
-    // ✅ 会員情報
-    Route::get('/user', [MyPageController::class, 'show'])->name('user.info');
-    Route::post('/user/delete', [MyPageController::class, 'delete'])->name('user.delete');
+    // 編集→確認（POST）
+    Route::post('/mypage/edit/confirm', [MyPageController::class, 'confirm'])
+        ->name('mypage.edit.confirm');
 
-    // ✅ 会員情報 編集→確認
-    Route::post('/mypage/edit/confirm', [MyPageController::class, 'confirm'])->name('mypage.edit.confirm');
+    // 確認→登録（更新）
+    Route::match(['post', 'put', 'patch'], '/mypage/update', [MyPageController::class, 'update'])
+        ->name('mypage.update');
 
-    // ✅ 確認→登録（POSTで更新するルートを追加）
-    Route::post('/mypage/update', [MyPageController::class, 'update'])->name('mypage.update');
+    // 物件画像追加（会員のみ）
+    Route::post('properties/{property}/images', [PropertyImageController::class, 'store'])
+        ->name('properties.images.store');
 
-    // ✅ お気に入り（会員のみ）
+    // お気に入り（会員のみ）
     Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
     Route::post('/favorites/{property}', [FavoriteController::class, 'store'])->name('favorites.store');
-    Route::delete('/favorites/{property}', [FavoriteController::class, 'destroy'])->name('favorites.destroy');
 
     // チャット相談
     Route::prefix('consultation')->name('consultation.')->group(function () {
@@ -128,6 +175,7 @@ Route::middleware('auth')->group(function () {
     });
 });
 
+
 /*
 |--------------------------------------------------------------------------
 | 管理者
@@ -136,14 +184,21 @@ Route::middleware('auth')->group(function () {
 
 Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
 
-    Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::resource('properties', PropertyManagementController::class)->only(['index', 'show', 'edit', 'update']);
-    Route::resource('users', UserManagementController::class)->only(['index', 'show']);
-    Route::resource('inquiries', InquiryManagementController::class)->only(['index']);
+    Route::resource('properties', PropertyManagementController::class)
+        ->only(['index', 'show', 'edit', 'update']);
 
-    Route::get('/consultations', [ConsultationController::class, 'adminIndex'])->name('consultations.index');
+    Route::resource('users', UserManagementController::class)
+        ->only(['index', 'show']);
+
+    Route::resource('inquiries', InquiryManagementController::class)
+        ->only(['index']);
+
+    Route::get('/consultations', [ConsultationController::class, 'adminIndex'])
+        ->name('consultations.index');
 });
+
 
 /*
 |--------------------------------------------------------------------------

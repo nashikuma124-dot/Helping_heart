@@ -19,7 +19,7 @@ class MyPageController extends Controller
     }
 
     /**
-     * ✅ 会員情報ページ
+     * 会員情報ページ
      * GET /user
      */
     public function show()
@@ -29,20 +29,19 @@ class MyPageController extends Controller
     }
 
     /**
-     * ✅ 会員情報編集画面
+     * 会員情報編集画面
      * GET /mypage/{mypage}/edit
-     * resourceの仕様で {mypage} が付くが、実際は「自分」だけ編集
+     * ※resourceの仕様で {mypage} が付くが、自分だけ編集
      */
-    public function edit($id)
+    public function edit($mypage)
     {
         $user = Auth::user();
         return view('mypage.user_edit', compact('user'));
     }
 
     /**
-     * ✅ 編集内容確認
+     * 編集内容確認
      * POST /mypage/edit/confirm
-     * → resources/views/mypage/user_edit_conf.blade.php
      */
     public function confirm(Request $request)
     {
@@ -57,8 +56,7 @@ class MyPageController extends Controller
             ],
             'name' => ['required', 'string', 'max:100'],
             'dob'  => ['nullable', 'date'],
-
-            // パスワードは「入力されたら更新」
+            // パスワードは入力されたら更新
             'password' => ['nullable', 'string', 'min:6', 'confirmed'],
         ], [
             'email.email' => '正しいメールアドレス形式で入力してください。',
@@ -68,57 +66,56 @@ class MyPageController extends Controller
             'password.min' => 'パスワードは6文字以上で入力してください。',
         ]);
 
-        // 空文字をnullへ
+        // 空文字→null
         $email = ($validated['email'] ?? '') !== '' ? $validated['email'] : null;
         $dob   = ($validated['dob'] ?? '') !== '' ? $validated['dob'] : null;
 
-        // ✅ confirm→update で使うので「入力値」をセッションに保持
-        // パスワードも更新したいので保持（平文が嫌ならconfirm画面で再入力方式にする必要あり）
+        // confirm→update で使う入力値をセッションへ
         $payload = [
-            'email' => $email,
-            'name'  => $validated['name'],
-            'dob'   => $dob,
-            'password' => $validated['password'] ?? null,
+            'email'    => $email,
+            'name'     => $validated['name'],
+            'dob'      => $dob,
+            'password' => $validated['password'] ?? null, // 平文保持（課題仕様優先）
         ];
 
         $request->session()->put('mypage_edit', $payload);
 
-        // 表示用（passwordは伏せ字表示する）
-        return view('mypage.user_edit_conf', [
-            'data' => [
-                'email' => $payload['email'],
-                'name'  => $payload['name'],
-                'dob'   => $payload['dob'],
-                'has_password' => !empty($payload['password']),
-            ],
-        ]);
+        // 表示用（パスワードは伏せ字）
+        $viewData = [
+            'email'        => $payload['email'],
+            'name'         => $payload['name'],
+            'dob'          => $payload['dob'],
+            'has_password' => !empty($payload['password']),
+        ];
+
+        // Bladeが session('mypage_edit') を直接読んでも、$dataを使っても動くように
+        return view('mypage.user_edit_conf', compact('viewData'))
+            ->with('data', $viewData);
     }
 
     /**
-     * ✅ 会員情報更新（POSTで更新）
+     * 会員情報更新
      * POST /mypage/update
-     * ※ PUT ではないので $id は取らない
      */
     public function update(Request $request)
     {
         $user = Auth::user();
 
-        // ✅ confirmで保持した内容を使って更新（確認画面からの登録を想定）
+        // confirmで保持した内容を使って更新（確認画面からの登録想定）
         $data = $request->session()->get('mypage_edit');
 
         if (!$data) {
-            // セッションが無い（直叩き/期限切れなど）
-            return redirect()->route('mypage.edit', 1)->with('error', 'セッションが切れました。もう一度入力してください。');
+            // セッション切れ対策：自分のeditへ戻す（←ここ重要）
+            return redirect()
+                ->route('mypage.edit', auth()->id())
+                ->with('error', 'セッションが切れました。もう一度入力してください。');
         }
 
-        // ここで最終ガード（念のため）
-        $request->merge([
-            'email' => $data['email'],
-            'name'  => $data['name'],
-            'dob'   => $data['dob'],
-        ]);
-
-        $validated = $request->validate([
+        /**
+         * ✅ 最終ガード（セッション値でも再バリデーション）
+         * セッションが書き換えられてもDBに入らないようにする
+         */
+        $validated = validator($data, [
             'email' => [
                 'nullable',
                 'email',
@@ -127,18 +124,20 @@ class MyPageController extends Controller
             ],
             'name' => ['required', 'string', 'max:100'],
             'dob'  => ['nullable', 'date'],
-        ]);
+            'password' => ['nullable', 'string', 'min:6'], // confirmedはconfirm側で済ませている
+        ])->validate();
 
-        // ✅ 保存（カラム名は dateofbirth 前提）
-        $user->fill([
-            'email'       => ($validated['email'] ?? '') !== '' ? $validated['email'] : null,
-            'name'        => $validated['name'],
-            'dateofbirth' => $validated['dob'] ?? $user->dateofbirth,
-        ]);
+        // ✅ 保存（あなたのDB設計：dateofbirthカラム前提）
+        $user->email = ($validated['email'] ?? '') !== '' ? $validated['email'] : null;
+        $user->name  = $validated['name'];
+
+        // 生年月日：入力が無ければnullにしたい場合は下の通り
+        // 「空なら既存維持」にしたいなら、elseで何もしない、に変えてOK
+        $user->dob = $validated['dob'] ?? null;
 
         // ✅ パスワード更新（入力があった場合のみ）
-        if (!empty($data['password'])) {
-            $user->password = Hash::make($data['password']);
+        if (!empty($validated['password'])) {
+            $user->password = Hash::make($validated['password']);
         }
 
         $user->save();
@@ -146,11 +145,13 @@ class MyPageController extends Controller
         // ✅ セッション破棄（再送防止）
         $request->session()->forget('mypage_edit');
 
-        return redirect()->route('user.info')->with('success', '会員情報を更新しました。');
+        return redirect()
+            ->route('user.info')
+            ->with('success', '会員情報を更新しました。');
     }
 
     /**
-     * ✅ 退会
+     * 退会
      * POST /user/delete
      */
     public function delete(Request $request)
@@ -164,5 +165,15 @@ class MyPageController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('top')->with('success', '退会しました。');
+    }
+
+    /**
+    * ✅ 退会確認画面
+    * GET /user/delete/confirm
+    */
+    public function deleteConfirm()
+    {
+        $user = Auth::user();
+        return view('mypage.user_delete_conf', compact('user'));
     }
 }

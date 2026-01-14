@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable
 {
-    use Notifiable;
+    use Notifiable, SoftDeletes;
 
     protected $table = 'users';
 
@@ -15,34 +16,17 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        // ここはDBの実カラム名に合わせてください（dateofbirthが無いなら dob に統一）
         'dateofbirth',
         'line_id',
     ];
 
     protected $hidden = [
         'password',
-        // DBに無いなら入れない
-        // 'remember_token',
     ];
 
     protected $casts = [
         'dateofbirth' => 'date',
+        'deleted_at'  => 'datetime',
     ];
-
-    /*
-    |--------------------------------------------------------------------------
-    | リレーション
-    |--------------------------------------------------------------------------
-    */
-
-    // お気に入り物件
-    public function favoriteProperties()
-    {
-        return $this->belongsToMany(
-            \App\Models\Property::class,
-            'favorites',
-            'user_id',
-            'property_id'
-        );
-    }
 }

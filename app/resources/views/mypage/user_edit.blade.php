@@ -2,97 +2,87 @@
 @section('title','会員情報編集')
 
 @section('content')
-<div class="container" style="max-width: 900px;">
+<div class="container py-4">
 
-  <div class="border rounded-4 p-4 mb-4 bg-white">
-    <div class="text-center fw-bold mb-4" style="font-size: 1.25rem;">
-      会員情報編集
-    </div>
+  {{-- タイトル --}}
+  <div class="text-center mb-4">
+    <h1 class="fw-bold">会員情報編集</h1>
+  </div>
 
-    {{-- エラーメッセージ --}}
-    @if ($errors->any())
-      <div class="alert alert-danger">
-        <ul class="mb-0">
-          @foreach ($errors->all() as $error)
-            <li>{{ $error }}</li>
-          @endforeach
-        </ul>
-      </div>
-    @endif
+  {{-- 枠 --}}
+  <div class="bg-white border rounded-4 p-4 mx-auto" style="max-width: 760px;">
 
-    <form method="POST" action="{{ route('mypage.update', auth()->id()) }}">
+    <form method="POST" action="{{ route('mypage.edit.confirm') }}">
       @csrf
-      @method('PUT')
 
-      <div class="d-flex justify-content-center">
-        <table class="table table-bordered text-center align-middle" style="width: 520px;">
+      {{-- 入力テーブル（画像の表レイアウトに寄せる） --}}
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle mb-4" style="table-layout: fixed;">
           <tbody>
+            {{-- メールアドレス --}}
             <tr>
-              <th class="bg-light" style="width: 35%;">メールアドレス</th>
-              <td style="width: 65%;">
+              <th class="text-center bg-light" style="width: 30%;">メールアドレス</th>
+              <td>
                 <input
-                  type="email"
+                  class="form-control"
                   name="email"
-                  class="form-control"
+                  type="email"
                   value="{{ old('email', $user->email ?? '') }}"
-                  placeholder="メールアドレス入力"
-                >
-              </td>
-            </tr>
-
-            <tr>
-              <th class="bg-light">パスワード</th>
-              <td>
-                <input
-                  type="password"
-                  name="password"
-                  class="form-control"
-                  placeholder="パスワード入力（英数字6文字以上）"
-                  autocomplete="new-password"
-                >
-              </td>
-            </tr>
-
-            <tr>
-              <th class="bg-light">パスワード確認入力</th>
-              <td>
-                <input
-                  type="password"
-                  name="password_confirmation"
-                  class="form-control"
-                  placeholder="パスワード確認入力（英数字6文字以上）"
-                  autocomplete="new-password"
-                >
-              </td>
-            </tr>
-
-            <tr>
-              <th class="bg-light">お名前</th>
-              <td>
-                <input
-                  type="text"
-                  name="name"
-                  class="form-control"
-                  value="{{ old('name', $user->name ?? '') }}"
-                  placeholder="名前入力"
                   required
                 >
               </td>
             </tr>
 
+            {{-- パスワード --}}
             <tr>
-              <th class="bg-light">生年月日</th>
+              <th class="text-center bg-light">パスワード</th>
               <td>
-                {{-- DBカラムが dateofbirth の想定 --}}
-                @php
-                  $dobVal = old('dob', $user->dateofbirth ?? '');
-                @endphp
                 <input
+                  class="form-control"
+                  name="password"
+                  type="password"
+                  autocomplete="new-password"
+                  placeholder="英数字6文字以上（変更しない場合は空欄）"
+                >
+              </td>
+            </tr>
+
+            {{-- パスワード確認 --}}
+            <tr>
+              <th class="text-center bg-light">パスワード確認</th>
+              <td>
+                <input
+                  class="form-control"
+                  name="password_confirmation"
+                  type="password"
+                  autocomplete="new-password"
+                  placeholder="確認のためもう一度入力"
+                >
+              </td>
+            </tr>
+
+            {{-- お名前 --}}
+            <tr>
+              <th class="text-center bg-light">お名前</th>
+              <td>
+                <input
+                  class="form-control"
+                  name="name"
+                  value="{{ old('name', $user->name ?? '') }}"
+                  required
+                >
+              </td>
+            </tr>
+
+            {{-- 生年月日 --}}
+            <tr>
+              <th class="text-center bg-light">生年月日</th>
+              <td>
+                <input
+                  class="form-control"
                   type="date"
                   name="dob"
-                  class="form-control"
-                  value="{{ $dobVal }}"
-                  placeholder="生年月日入力"
+                  value="{{ old('dob', $user->dateofbirth ?? '') }}"
                 >
               </td>
             </tr>
@@ -100,29 +90,20 @@
         </table>
       </div>
 
-      <div class="d-flex justify-content-center gap-3 mt-4">
-  {{-- ⑥ 編集内容確認画面へ（confirmへPOST） --}}
-  <button type="submit"
-          class="btn btn-outline-secondary px-4"
-          formaction="{{ route('mypage.edit.confirm') }}"
-          formmethod="POST">
-    ⑥ 編集内容確認画面へ
-  </button>
+      {{-- ボタン（画像の⑥⑦） --}}
+      <div class="d-flex justify-content-center gap-3">
+        <button type="submit" class="btn btn-outline-dark px-4">
+          ⑥ 編集内容確認画面へ
+        </button>
 
-  {{-- ⑦ 会員登録削除 --}}
-  <button type="submit"
-          class="btn btn-outline-secondary px-4"
-          form="deleteForm"
-          onclick="return confirm('本当に退会しますか？');">
-    ⑦ 会員登録削除
-  </button>
-</div>
+        {{-- 「削除」は別画面に飛ばす想定（あなたのルートに合わせている） --}}
+       <a href="{{ route('user.delete.confirm') }}" class="btn btn-outline-danger px-4">
+        ⑦ 会員登録削除
+       </a>
 
-    </form>
 
-    {{-- 退会フォーム（別フォーム） --}}
-    <form id="deleteForm" method="POST" action="{{ route('user.delete') }}">
-      @csrf
+      </div>
+
     </form>
 
   </div>

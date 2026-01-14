@@ -50,7 +50,6 @@
                     <form method="POST" action="{{ route('favorites.destroy', $property->id) }}"
                           onsubmit="return confirm('お気に入りを解除しますか？');">
                       @csrf
-                      @method('DELETE')
                       <button class="btn btn-outline-danger btn-sm">解除</button>
                     </form>
 
