@@ -24,8 +24,8 @@
           ②お気に入り物件<br>一覧
         </a>
 
-        {{-- ③ LINE相談案内 --}}
-        <a href="{{ route('consultation.home') }}"
+        {{-- ③ LINE相談案内 → consultation/index.blade.phpへ --}}
+        <a href="{{ route('consultation.index') }}"
            class="btn btn-outline-secondary py-4 fw-bold rounded-3"
            style="border-width:2px;">
           ③LINE相談案内
@@ -33,9 +33,8 @@
 
         {{-- ④ 会員情報 --}}
         <a href="{{ route('user.info') }}" class="btn btn-primary">
-            会員情報
+          会員情報
         </a>
-
 
       </div>
     </div>
